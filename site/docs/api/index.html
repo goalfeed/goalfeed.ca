@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REST API reference — Goalfeed docs</title>
+<meta name="description" content="Every Goalfeed HTTP endpoint: method, params, response shape, a runnable curl example, and errors.">
+<link rel="canonical" href="https://goalfeed.ca/docs/api/">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f6fb" media="(prefers-color-scheme: light)">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="REST API reference — Goalfeed docs">
+<meta property="og:description" content="Every Goalfeed HTTP endpoint: method, params, response shape, a runnable curl example, and errors.">
+<meta property="og:url" content="https://goalfeed.ca/docs/api/">
+<meta property="og:image" content="https://goalfeed.ca/assets/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="REST API reference — Goalfeed docs">
+<meta name="twitter:description" content="Every Goalfeed HTTP endpoint: method, params, response shape, a runnable curl example, and errors.">
+<meta name="twitter:image" content="https://goalfeed.ca/assets/og-image.png">
+
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-in">
+    <a class="brand" href="/" aria-label="Goalfeed home">
+      <picture>
+        <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+        <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+      </picture>
+    </a>
+    <nav aria-label="Primary">
+      <a class="opt" href="/#install">Install</a>
+      <a href="/docs/" aria-current="page">Docs</a>
+      <a href="/docs/api/">API</a>
+      <a class="nav-cta" href="https://github.com/goalfeed/goalfeed">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap" style="padding-block: var(--sp-8)">
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Goalfeed</a>
+      <span class="sep">/</span>
+      <a href="/docs/">Docs</a>
+      <span class="sep">/</span>
+      <span aria-current="page">REST API</span>
+    </nav>
+
+    <div class="doc-layout">
+      <nav class="doc-sidebar" aria-label="Docs">
+        <h2>Overview</h2>
+        <ul>
+          <li><a href="/docs/">Docs home</a></li>
+        </ul>
+        <h2>Tutorial</h2>
+        <ul>
+          <li><a href="/docs/getting-started/">Getting started</a></li>
+        </ul>
+        <h2>How-to</h2>
+        <ul>
+          <li><a href="/docs/install/">Install</a></li>
+          <li><a href="/docs/home-assistant/">Home Assistant automations</a></li>
+          <li><a href="/docs/troubleshooting/">Troubleshooting</a></li>
+        </ul>
+        <h2>Reference</h2>
+        <ul>
+          <li><a href="/docs/configuration/">Configuration</a></li>
+          <li><a href="/docs/api/" aria-current="page">REST API</a></li>
+          <li><a href="/docs/websocket/">WebSocket</a></li>
+          <li><a href="/docs/leagues/">Leagues</a></li>
+        </ul>
+        <h2>Explanation</h2>
+        <ul>
+          <li><a href="/docs/architecture/">Architecture</a></li>
+          <li><a href="/docs/security/">Security model</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc-content">
+        <h1>REST API reference</h1>
+        <p class="lede">Every supported HTTP endpoint Goalfeed exposes with <code>--web</code>,
+          on <code>--web-port</code> (default <code>8080</code>).</p>
+
+        <h2>Minimal working example</h2>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#api-minimal">Copy</button>
+          </div>
+          <pre id="api-minimal"><code>curl -s http://localhost:8080/api/games | python3 -m json.tool</code></pre>
+        </div>
+        <p>Every JSON endpoint wraps its payload in the same envelope:</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">go</span>
+            <button class="copy-btn" type="button" data-copy-target="#api-envelope">Copy</button>
+          </div>
+          <pre id="api-envelope"><code>type ApiResponse struct {
+	Success bool        `json:"success"`
+	Data    interface{} `json:"data"`
+	Message string      `json:"message,omitempty"`
+}</code></pre>
+        </div>
+        <div class="callout">
+          <span class="callout-tag">Worth knowing</span>
+          <p>There is no authentication on any endpoint below, and CORS allows every origin.
+            This is by design for a home-network tool &mdash; see
+            <a href="/docs/security/">Security</a> before putting this API anywhere reachable
+            from the internet.</p>
+        </div>
+
+        <h2>Games</h2>
+
+        <h3><code>GET /api/games</code></h3>
+        <p>All currently active games across every monitored team and league.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody><tr><td colspan="5"><em>none</em></td></tr></tbody>
+          </table>
+        </div>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#api-games">Copy</button>
+          </div>
+          <pre id="api-games"><code>curl -s http://localhost:8080/api/games</code></pre>
+        </div>
+        <p><strong>Response:</strong> <code>data</code> is an array of
+          <code>models.Game</code> &mdash; <code>{ leagueId, gameCode, currentState: { home,
+          away, period, clock, status, venue, weather }, statistics, ... }</code>. NFL games
+          get on-the-fly enrichment of missing down/distance/possession from a fresh ESPN call.
+          <strong>Errors:</strong> <code>500</code> on an internal failure.</p>
+
+        <h3><code>GET /api/games/history</code></h3>
+        <p>Games (any registered league, including IIHF) on a given date, filtered to your
+          monitored teams. <strong>Not listed in the generated Swagger spec</strong>
+          (<code>docs/swagger.yaml</code>) even though it's real and working &mdash; a
+          documentation gap in the generated spec, not a hint that the endpoint is
+          unsupported.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>date</code></td><td>string</td><td>&mdash;</td><td>yes</td>
+                <td><code>YYYY-MM-DD</code>. Missing or malformed &rarr; <code>400</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#api-history">Copy</button>
+          </div>
+          <pre id="api-history"><code>curl -s "http://localhost:8080/api/games/history?date=2026-01-15"</code></pre>
+        </div>
+        <p><strong>Response:</strong> <code>data</code> is an array of <code>models.Game</code>,
+          restricted to leagues where <code>watch.&lt;league&gt;</code> has at least one team
+          configured &mdash; a league with no watched teams is skipped entirely, not returned
+          empty. <strong>Errors:</strong> <code>400</code> (missing/invalid <code>date</code>).</p>
+
+        <h3><code>GET /api/upcoming</code></h3>
+        <p>Upcoming games (next 7 days) for monitored teams across every registered league,
+          including IIHF.</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#api-upcoming">Copy</button>
+          </div>
+          <pre id="api-upcoming"><code>curl -s http://localhost:8080/api/upcoming</code></pre>
+        </div>
+        <p><strong>Response:</strong> <code>data</code> is an array of <code>models.Game</code>.
+          <strong>Errors:</strong> <code>500</code>.</p>
+
+        <h3><code>POST /api/clear</code></h3>
+        <p>Clears every tracked game from the in-memory store. Safe to call any time &mdash;
+          the store is ephemeral, and the next poll cycle rebuilds it.</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#api-clear">Copy</button>
+          </div>
+          <pre id="api-clear"><code>curl -s -X POST http://localhost:8080/api/clear</code></pre>
+        </div>
+        <p><strong>Response:</strong> <code>{ "success": true }</code>.
+          <strong>Errors:</strong> <code>500</code>.</p>
+
+        <h3><code>POST /api/refresh</code> &mdash; documented, not functional</h3>
+        <div class="callout">
+          <span class="callout-tag">Do not rely on this</span>
+          <p>The handler is an explicit placeholder left over from a refactor. It logs
+            <code>"Refresh active games - placeholder implementation"</code> and returns
+            <code>HTTP 200</code> unconditionally &mdash; it does not refresh anything. Games
+            refresh on their own every minute regardless of whether you call this.</p>
+        </div>
+
+        <h2>Events &amp; logs</h2>
+
+        <h3><code>GET /api/events</code></h3>
+        <p>Recent goal/score events, most recent first.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>leagueId</code></td><td>integer</td><td>&mdash;</td><td>no</td>
+                <td>see <a href="/docs/leagues/">leagues reference</a> for IDs</td></tr>
+              <tr><td><code>team</code></td><td>string</td><td>&mdash;</td><td>no</td><td>team code</td></tr>
+              <tr><td><code>since</code></td><td>string</td><td>&mdash;</td><td>no</td><td>RFC3339 timestamp</td></tr>
+              <tr><td><code>limit</code></td><td>integer</td><td><code>50</code></td><td>no</td><td>max rows returned</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#api-events">Copy</button>
+          </div>
+          <pre id="api-events"><code>curl -s "http://localhost:8080/api/events?leagueId=1&team=WPG&limit=10"</code></pre>
+        </div>
+        <p><strong>Response:</strong> <code>data</code> is an array of <code>models.Event</code>
+          objects. <strong>Remember:</strong> <code>type</code> and <code>description</code>
+          are empty strings for NHL/MLB/NFL/CFL events &mdash; only Olympic hockey populates
+          them (see <a href="/docs/websocket/">WebSocket reference</a>). <strong>Errors:</strong>
+          <code>400</code> (bad <code>since</code>/<code>limit</code>), <code>500</code>.</p>
+
+        <h3><code>GET /api/logs</code></h3>
+        <p>The JSONL application log &mdash; every event delivery attempt (success or failure)
+          and state change, queryable. This is where the errors on the
+          <a href="/docs/troubleshooting/">troubleshooting page</a> actually show up.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>leagueId</code></td><td>integer</td><td>&mdash;</td><td>no</td><td></td></tr>
+              <tr><td><code>team</code></td><td>string</td><td>&mdash;</td><td>no</td><td></td></tr>
+              <tr><td><code>since</code></td><td>string</td><td>&mdash;</td><td>no</td><td>RFC3339</td></tr>
+              <tr><td><code>limit</code></td><td>integer</td><td><code>0</code> (all)</td><td>no</td><td></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#api-logs">Copy</button>
+          </div>
+          <pre id="api-logs"><code>curl -s "http://localhost:8080/api/logs?limit=5"</code></pre>
+        </div>
+        <p><strong>Response</strong> (real, captured):</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">json</span>
+            <button class="copy-btn" type="button" data-copy-target="#api-logs-resp">Copy</button>
+          </div>
+          <pre id="api-logs-resp"><code>{
+  "id": "1787264741605724000-TEST-",
+  "type": "event",
+  "teamCode": "TEST",
+  "target": "ha:event:goal",
+  "success": false,
+  "error": "refusing to send Home Assistant request: home assistant url is empty",
+  "timestamp": "2026-08-20T17:25:41.605724-05:00"
+}</code></pre>
+        </div>
+        <p><strong>Errors:</strong> <code>400</code>, <code>500</code>.</p>
+
+        <h2>Teams &amp; leagues</h2>
+
+        <h3><code>GET /api/teams</code></h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Param</th><th>Type</th><th>Default</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>leagueId</code></td><td>integer</td><td>&mdash;</td><td>yes</td>
+                <td>1=NHL, 2=MLB, 5=CFL, 6=NFL (full table:
+                  <a href="/docs/leagues/">leagues reference</a>)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#api-teams">Copy</button>
+          </div>
+          <pre id="api-teams"><code>curl -s "http://localhost:8080/api/teams?leagueId=1"</code></pre>
+        </div>
+        <p><strong>Response:</strong> <code>data</code> is an array of team objects
+          (<code>teamId</code>, <code>teamCode</code>, <code>teamName</code>,
+          <code>leagueId</code>, <code>logoUrl</code>). <strong>Errors:</strong>
+          <code>400</code> (missing/invalid <code>leagueId</code>), <code>500</code>.</p>
+
+        <h3><code>GET /api/leagues</code></h3>
+        <p>Current per-league watch configuration.</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#api-leagues-get">Copy</button>
+          </div>
+          <pre id="api-leagues-get"><code>curl -s http://localhost:8080/api/leagues</code></pre>
+        </div>
+        <p><strong>Errors:</strong> <code>500</code>.</p>
+
+        <h3><code>POST /api/leagues</code></h3>
+        <p>Replaces the watched-team list for one league.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Body field</th><th>Type</th><th>Required</th></tr></thead>
+            <tbody>
+              <tr><td><code>leagueId</code></td><td>integer</td><td>yes</td></tr>
+              <tr><td><code>teams</code></td><td>array of string</td><td>yes</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#api-leagues-post">Copy</button>
+          </div>
+          <pre id="api-leagues-post"><code>curl -s -X POST http://localhost:8080/api/leagues \
+  -H "Content-Type: application/json" \
+  -d '{"leagueId": 1, "teams": ["WPG", "TOR"]}'</code></pre>
+        </div>
+        <p><strong>Errors:</strong> <code>400</code> (bad body), <code>500</code>.</p>
+
+        <h2>Home Assistant</h2>
+
+        <h3><code>GET /api/homeassistant/status</code></h3>
+        <p>Whether Goalfeed can currently reach Home Assistant, and via which source.</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#api-ha-status">Copy</button>
+          </div>
+          <pre id="api-ha-status"><code>curl -s http://localhost:8080/api/homeassistant/status</code></pre>
+        </div>
+        <p><strong>Response:</strong> <code>data</code> is
+          <code>{ connected, source, message, url, tokenSet }</code> &mdash; note
+          <code>tokenSet</code> is a boolean, the access token itself is never echoed here.
+          <strong>Errors:</strong> <code>500</code>.</p>
+
+        <h3><code>GET /api/homeassistant/config</code></h3>
+        <p><strong>Response:</strong> <code>data.configured</code> is
+          <code>{ url, tokenSet }</code> &mdash; again, boolean only; the token value is never
+          returned by this endpoint. <strong>Errors:</strong> <code>500</code>.</p>
+
+        <h3><code>POST /api/homeassistant/config</code></h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Body field</th><th>Type</th><th>Default</th><th>Required</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td><code>url</code></td><td>string</td><td><code>""</code></td><td>no</td>
+                <td>validated &mdash; a public/remote URL is rejected unless
+                  <code>home_assistant.allow_remote_url</code> is <code>true</code> (see
+                  <a href="/docs/security/">Security</a>)</td></tr>
+              <tr><td><code>accessToken</code></td><td>string</td><td><code>""</code></td><td>no</td><td></td></tr>
+              <tr><td><code>clearToken</code></td><td>bool</td><td><code>false</code></td><td>no</td>
+                <td>if true, clears the stored token regardless of <code>accessToken</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#api-ha-config-post">Copy</button>
+          </div>
+          <pre id="api-ha-config-post"><code>curl -s -X POST http://localhost:8080/api/homeassistant/config \
+  -H "Content-Type: application/json" \
+  -d '{"url": "http://homeassistant.local:8123", "accessToken": "your-long-lived-token"}'</code></pre>
+        </div>
+        <p><strong>Response message differs depending on <code>web.allow_config_writes</code>:</strong>
+          by default, <code>"Configuration updated for this session only (not persisted to
+          disk). Set web.allow_config_writes: true in config.yaml to allow this API to write
+          config.yaml."</code> &mdash; the change applies in-memory immediately but reverts on
+          restart unless that key is set. <strong>Errors:</strong> <code>400</code> (invalid
+          JSON, or a URL rejected by the remote-address check).</p>
+
+        <h2>Excluded from this reference</h2>
+        <p><code>POST /api/debug/nfl/add</code> exists in the code and is tagged
+          <code>debug</code> in its own Swagger annotation. It force-adds an NFL game by ESPN
+          event ID for testing and is intentionally left out of this reference &mdash; it is
+          not a supported part of the public API surface.</p>
+
+        <h2>Next</h2>
+        <p>Real-time push instead of polling this API &mdash;
+          <a href="/docs/websocket/">WebSocket reference</a>. Threat model for running this
+          unauthenticated API at all &mdash; <a href="/docs/security/">Security</a>.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-in">
+    <picture>
+      <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+      <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+    </picture>
+    <span class="footer-note">Self-hosted &middot; No account &middot; No tracking</span>
+    <span class="footer-links">
+      <a href="https://github.com/goalfeed/goalfeed">GitHub</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/goalfeed/goalfeed/issues">Issues</a>
+      <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
+    </span>
+    <span class="footer-meta">
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
+      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      official league data.
+    </span>
+  </div>
+</footer>
+
+<script src="/site.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leagues reference — Goalfeed docs</title>
+<meta name="description" content="Every league Goalfeed knows about, its upstream data source, and its honest support tier.">
+<link rel="canonical" href="https://goalfeed.ca/docs/leagues/">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f6fb" media="(prefers-color-scheme: light)">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Leagues reference — Goalfeed docs">
+<meta property="og:description" content="Every league Goalfeed knows about, its upstream data source, and its honest support tier.">
+<meta property="og:url" content="https://goalfeed.ca/docs/leagues/">
+<meta property="og:image" content="https://goalfeed.ca/assets/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Leagues reference — Goalfeed docs">
+<meta name="twitter:description" content="Every league Goalfeed knows about, its upstream data source, and its honest support tier.">
+<meta name="twitter:image" content="https://goalfeed.ca/assets/og-image.png">
+
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-in">
+    <a class="brand" href="/" aria-label="Goalfeed home">
+      <picture>
+        <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+        <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+      </picture>
+    </a>
+    <nav aria-label="Primary">
+      <a class="opt" href="/#install">Install</a>
+      <a href="/docs/" aria-current="page">Docs</a>
+      <a href="/docs/api/">API</a>
+      <a class="nav-cta" href="https://github.com/goalfeed/goalfeed">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap" style="padding-block: var(--sp-8)">
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Goalfeed</a>
+      <span class="sep">/</span>
+      <a href="/docs/">Docs</a>
+      <span class="sep">/</span>
+      <span aria-current="page">Leagues</span>
+    </nav>
+
+    <div class="doc-layout">
+      <nav class="doc-sidebar" aria-label="Docs">
+        <h2>Overview</h2>
+        <ul>
+          <li><a href="/docs/">Docs home</a></li>
+        </ul>
+        <h2>Tutorial</h2>
+        <ul>
+          <li><a href="/docs/getting-started/">Getting started</a></li>
+        </ul>
+        <h2>How-to</h2>
+        <ul>
+          <li><a href="/docs/install/">Install</a></li>
+          <li><a href="/docs/home-assistant/">Home Assistant automations</a></li>
+          <li><a href="/docs/troubleshooting/">Troubleshooting</a></li>
+        </ul>
+        <h2>Reference</h2>
+        <ul>
+          <li><a href="/docs/configuration/">Configuration</a></li>
+          <li><a href="/docs/api/">REST API</a></li>
+          <li><a href="/docs/websocket/">WebSocket</a></li>
+          <li><a href="/docs/leagues/" aria-current="page">Leagues</a></li>
+        </ul>
+        <h2>Explanation</h2>
+        <ul>
+          <li><a href="/docs/architecture/">Architecture</a></li>
+          <li><a href="/docs/security/">Security model</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc-content">
+        <h1>Leagues reference</h1>
+        <p class="lede">Every league Goalfeed has code for, its upstream data source, and an
+          honest tier &mdash; not every league that has a client is one you can actually get a
+          Home Assistant event from today.</p>
+
+        <h2>Minimal working example</h2>
+        <p>List the teams Goalfeed knows about for a league (useful for building
+          <code>watch.*</code> config or a team picker):</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#lg-minimal">Copy</button>
+          </div>
+          <pre id="lg-minimal"><code>curl -s "http://localhost:8080/api/teams?leagueId=1" | python3 -m json.tool</code></pre>
+        </div>
+
+        <h2>Three tiers, stated plainly</h2>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Tier</th><th>Meaning</th><th>Leagues</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="badge badge--live">Live</span></td>
+                <td>Registered in the 1-second/1-minute polling loop. A score change fires a
+                  real Home Assistant <code>goal</code> event and a WebSocket
+                  <code>event</code> message.</td>
+                <td>NHL, MLB, CFL, NFL</td>
+              </tr>
+              <tr>
+                <td><span class="badge">API only</span></td>
+                <td>A full client and service exist and answer
+                  <code>/api/games/history</code>, <code>/api/upcoming</code>, and
+                  <code>/api/teams</code>, but the league is never registered in
+                  <code>main.go</code>'s live polling loop. No goal event will ever fire for
+                  it.</td>
+                <td>IIHF</td>
+              </tr>
+              <tr>
+                <td><span class="badge badge--wip">Untracked WIP</span></td>
+                <td>Code exists, compiles, and is wired into both <code>main.go</code> and the
+                  web API locally &mdash; but the source files are not committed to git, so
+                  they are not part of any tagged release or the public repository as
+                  published. Not something you can install today.</td>
+                <td>Olympic Men's Hockey, Olympic Women's Hockey</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Per-league detail</h2>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>League</th><th>ID</th><th>Upstream source</th><th>What's detected</th><th>Tier</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>NHL</td><td><code>1</code></td>
+                <td><code>api-web.nhle.com</code> &mdash; an undocumented, unofficial NHL API</td>
+                <td>Score change &rarr; one goal event per point (correct for hockey, where
+                  every goal is one point)</td>
+                <td><span class="badge badge--live">Live</span></td>
+              </tr>
+              <tr>
+                <td>MLB</td><td><code>2</code></td>
+                <td><code>statsapi.mlb.com</code> &mdash; the unofficial MLB Stats API</td>
+                <td>Score change &rarr; one event per run</td>
+                <td><span class="badge badge--live">Live</span></td>
+              </tr>
+              <tr>
+                <td>CFL</td><td><code>5</code></td>
+                <td><code>cflscoreboard.cfl.ca</code>, plus a third-party sports-betting
+                  live-tracker widget feed (<code>betstream.betgenius.com</code>) for play
+                  detail &mdash; not a CFL-operated API</td>
+                <td>Score change &rarr; one event per point &mdash; a converted touchdown (7
+                  points) fires <strong>seven</strong> events, not one</td>
+                <td><span class="badge badge--live">Live</span></td>
+              </tr>
+              <tr>
+                <td>NFL</td><td><code>6</code></td>
+                <td>ESPN's public <code>site.api.espn.com</code> site API, plus ESPN's
+                  "Fastcast" WebSocket for lower-latency in-game push updates</td>
+                <td>Same raw score-diff as CFL &mdash; a touchdown-plus-conversion fires seven
+                  events</td>
+                <td><span class="badge badge--live">Live</span></td>
+              </tr>
+              <tr>
+                <td>IIHF</td><td><code>4</code></td>
+                <td><code>realtime.iihf.com</code></td>
+                <td>Nothing &mdash; not polled by the background tickers at all</td>
+                <td><span class="badge">API only</span></td>
+              </tr>
+              <tr>
+                <td>Olympic Men's Hockey</td><td><code>7</code></td>
+                <td><code>olympics.com</code>'s internal WMR API, hard-coded to the 2026 Winter
+                  Games endpoint (<code>wmr-owg2026</code>) &mdash; will need a code change for
+                  future Games, not a generic/configurable integration</td>
+                <td>Score change &rarr; one event per goal. This is also the <em>only</em>
+                  league service that populates <code>Event.Type</code> and
+                  <code>Event.Description</code> &mdash; see the
+                  <a href="/docs/websocket/">WebSocket reference</a></td>
+                <td><span class="badge badge--wip">Untracked WIP</span></td>
+              </tr>
+              <tr>
+                <td>Olympic Women's Hockey</td><td><code>8</code></td>
+                <td>Same as above</td>
+                <td>Same as above</td>
+                <td><span class="badge badge--wip">Untracked WIP</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout">
+          <span class="callout-tag">EPL is not a league here</span>
+          <p>League ID <code>3</code> is reserved for EPL (English Premier League / soccer) in
+            <code>models/league.go</code>, and the bundled web UI still has a leftover EPL
+            icon/color mapping in its event-feed component. There is no
+            <code>clients/leagues/epl</code> or <code>services/leagues/epl</code> package at
+            all &mdash; it is an unused constant, not a supported or partially-supported
+            league. Nothing about EPL/soccer belongs in a Goalfeed config file.</p>
+        </div>
+
+        <h2>All upstream sources are unofficial</h2>
+        <p>Every API above is the same undocumented, unversioned endpoint each league's own
+          website or app uses &mdash; not a published, contractually stable public API. Any of
+          them can change shape or disappear without notice, and Goalfeed has no fallback if
+          one does. See <a href="/docs/architecture/">Architecture</a> for why this is the
+          project's biggest operational risk, not just a footnote.</p>
+
+        <h2>Next</h2>
+        <p>Set which teams to watch per league &mdash;
+          <a href="/docs/configuration/">configuration reference</a>. Understand why score-diff
+          detection has the consequences it does &mdash; <a href="/docs/architecture/">Architecture</a>.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-in">
+    <picture>
+      <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+      <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+    </picture>
+    <span class="footer-note">Self-hosted &middot; No account &middot; No tracking</span>
+    <span class="footer-links">
+      <a href="https://github.com/goalfeed/goalfeed">GitHub</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/goalfeed/goalfeed/issues">Issues</a>
+      <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
+    </span>
+    <span class="footer-meta">
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
+      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      official league data.
+    </span>
+  </div>
+</footer>
+
+<script src="/site.js" defer></script>
+</body>
+</html>

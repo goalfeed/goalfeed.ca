@@ -1,0 +1,34 @@
+name: Feature request
+description: Suggest a new page, doc, or improvement for goalfeed.ca.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This site is hand-written static HTML/CSS with no build step or framework, on purpose — see
+        [CONTRIBUTING.md](https://github.com/goalfeed/goalfeed.ca/blob/main/CONTRIBUTING.md). Requests to add a
+        bundler, framework, or CMS won't move forward; requests for new content, docs, or design fixes are welcome.
+
+        Feature requests for the Goalfeed service itself (new leagues, API capabilities) belong in
+        [goalfeed/goalfeed](https://github.com/goalfeed/goalfeed/issues).
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's missing or could be better?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: New page, content addition, design tweak, etc.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Links, screenshots, or examples from other sites, if relevant.

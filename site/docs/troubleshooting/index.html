@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Troubleshooting — Goalfeed docs</title>
+<meta name="description" content="Real Goalfeed failure modes, the exact error text, and the next step for each.">
+<link rel="canonical" href="https://goalfeed.ca/docs/troubleshooting/">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f6fb" media="(prefers-color-scheme: light)">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Troubleshooting — Goalfeed docs">
+<meta property="og:description" content="Real Goalfeed failure modes, the exact error text, and the next step for each.">
+<meta property="og:url" content="https://goalfeed.ca/docs/troubleshooting/">
+<meta property="og:image" content="https://goalfeed.ca/assets/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Troubleshooting — Goalfeed docs">
+<meta name="twitter:description" content="Real Goalfeed failure modes, the exact error text, and the next step for each.">
+<meta name="twitter:image" content="https://goalfeed.ca/assets/og-image.png">
+
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-in">
+    <a class="brand" href="/" aria-label="Goalfeed home">
+      <picture>
+        <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+        <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+      </picture>
+    </a>
+    <nav aria-label="Primary">
+      <a class="opt" href="/#install">Install</a>
+      <a href="/docs/" aria-current="page">Docs</a>
+      <a href="/docs/api/">API</a>
+      <a class="nav-cta" href="https://github.com/goalfeed/goalfeed">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap" style="padding-block: var(--sp-8)">
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Goalfeed</a>
+      <span class="sep">/</span>
+      <a href="/docs/">Docs</a>
+      <span class="sep">/</span>
+      <span aria-current="page">Troubleshooting</span>
+    </nav>
+
+    <div class="doc-layout">
+      <nav class="doc-sidebar" aria-label="Docs">
+        <h2>Overview</h2>
+        <ul>
+          <li><a href="/docs/">Docs home</a></li>
+        </ul>
+        <h2>Tutorial</h2>
+        <ul>
+          <li><a href="/docs/getting-started/">Getting started</a></li>
+        </ul>
+        <h2>How-to</h2>
+        <ul>
+          <li><a href="/docs/install/">Install</a></li>
+          <li><a href="/docs/home-assistant/">Home Assistant automations</a></li>
+          <li><a href="/docs/troubleshooting/" aria-current="page">Troubleshooting</a></li>
+        </ul>
+        <h2>Reference</h2>
+        <ul>
+          <li><a href="/docs/configuration/">Configuration</a></li>
+          <li><a href="/docs/api/">REST API</a></li>
+          <li><a href="/docs/websocket/">WebSocket</a></li>
+          <li><a href="/docs/leagues/">Leagues</a></li>
+        </ul>
+        <h2>Explanation</h2>
+        <ul>
+          <li><a href="/docs/architecture/">Architecture</a></li>
+          <li><a href="/docs/security/">Security model</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc-content">
+        <h1>Troubleshooting</h1>
+        <p class="lede">Real failure modes, the actual text Goalfeed produces, and the next
+          concrete step &mdash; not a generic "check your configuration."</p>
+
+        <div class="callout callout--info">
+          <span class="callout-tag">First move, always</span>
+          <p>Every event attempt (success or failure) is written to the JSONL app log and
+            queryable at <code>/api/logs</code> whether or not Home Assistant is reachable
+            &mdash; that log is where every error below actually shows up. Start there:</p>
+        </div>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#ts-logs">Copy</button>
+          </div>
+          <pre id="ts-logs"><code>curl -s "http://localhost:8080/api/logs?limit=5" | python3 -m json.tool
+<span class="c"># or, without --web, read the file directly:</span>
+tail -n 5 app.log.jsonl</code></pre>
+        </div>
+
+        <h2>"home assistant url is empty"</h2>
+        <p><strong>Where you'll see it:</strong> an app log entry with
+          <code>"target": "ha:event:goal"</code>, <code>"success": false</code>, and
+          <code>"error": "refusing to send Home Assistant request: home assistant url is
+          empty"</code> (this is real, captured output &mdash; not a paraphrase). No exception,
+          no crash &mdash; Goalfeed keeps polling and logging, it just can't reach Home
+          Assistant yet.</p>
+        <p><strong>Cause:</strong> neither <code>home_assistant.url</code>/
+          <code>home_assistant.access_token</code> in <code>config.yaml</code> (or the matching
+          <code>GOALFEED_HOME_ASSISTANT_*</code> env vars) nor the Supervisor add-on env vars
+          (<code>SUPERVISOR_API</code>/<code>SUPERVISOR_TOKEN</code>) are set.</p>
+        <p><strong>Next step:</strong> set both keys in <code>config.yaml</code> (see the
+          <a href="/docs/configuration/">configuration reference</a>) if you're not running as
+          the Home Assistant add-on, or confirm the add-on's Supervisor integration is enabled
+          if you are. Then check <code>/api/homeassistant/status</code>.</p>
+
+        <h2>"does not look like a private/local address"</h2>
+        <p><strong>Where you'll see it:</strong> the same app log target, with an error like
+          <code>refusing to send Home Assistant request: home assistant url "http://ha.example.com"
+          does not look like a private/local address; set home_assistant.allow_remote_url:
+          true if you intentionally run a remote Home Assistant instance</code> (real error
+          text from <code>utils/hurl.go</code>).</p>
+        <p><strong>Cause:</strong> <code>home_assistant.url</code> resolves to a public
+          hostname or routable IP. Goalfeed refuses this by default so a poisoned or
+          hand-edited config can't send your long-lived access token to an attacker-controlled
+          host &mdash; see <a href="/docs/security/">Security</a> for the full reasoning.</p>
+        <p><strong>Next step:</strong> if this is genuinely a remote Home Assistant instance
+          you control, set <code>home_assistant.allow_remote_url: true</code>. If it isn't
+          &mdash; if you didn't expect a public hostname here at all &mdash; treat this as the
+          check working as intended and fix the URL instead.</p>
+
+        <h2>"Failed to send event to Home Assistant" / a non-2xx status in the log</h2>
+        <p><strong>Where you'll see it:</strong> an app log entry with
+          <code>"success": false</code> and an <code>"error"</code> field containing an HTTP
+          status like <code>401 Unauthorized</code> or <code>404 Not Found</code>, rather than
+          the URL-validation message above (so the URL passed validation, but the request
+          itself failed).</p>
+        <p><strong>Cause:</strong> usually an expired or wrong long-lived access token
+          (<code>401</code>), or a URL that's reachable but wrong (<code>404</code> if it
+          doesn't point at a real Home Assistant instance's REST API).</p>
+        <p><strong>Next step:</strong> generate a fresh long-lived access token from your
+          Home Assistant profile page, update <code>home_assistant.access_token</code>, and
+          restart Goalfeed. If you're on the add-on, this shouldn't happen at all &mdash; the
+          Supervisor token doesn't expire the way a manually-created one can; check
+          <code>/api/homeassistant/status</code> instead.</p>
+
+        <h2>The web UI shows a bare JSON status blob instead of the scoreboard</h2>
+        <p><strong>Where you'll see it:</strong> opening <code>http://&lt;host&gt;:8080/</code>
+          returns
+          <code>{"api":"/api","message":"Goalfeed API Server","status":"running","ws":"/ws","note":"Frontend
+          not available. Install Node.js and npm to enable the web interface."}</code> (real,
+          captured output) instead of the React scoreboard.</p>
+        <p><strong>Cause:</strong> the <code>web/frontend/build</code> directory doesn't exist
+          next to the binary. This happens if you built with <code>make backend</code> instead
+          of <code>make build</code>, or ran a Go binary built from a bare
+          <code>go build</code> without the frontend step (the plain <code>Dockerfile</code>
+          always produces this &mdash; see <a href="/docs/install/">Install</a>). The REST API
+          and WebSocket feed still work in this mode; only the bundled UI is missing.</p>
+        <p><strong>Next step:</strong> use a release tarball from
+          <a href="https://github.com/goalfeed/goalfeed/releases/latest">GitHub Releases</a>
+          (bundles the frontend), or run <code>make build</code> / <code>make frontend</code>
+          from a source checkout with Node 20+ installed.</p>
+
+        <h2>"I set <code>--nfl WPG</code> and got a flag error"</h2>
+        <p><strong>Cause:</strong> <code>--nfl</code> isn't a real flag. The only registered
+          CLI flags are <code>--nhl</code>, <code>--mlb</code>, and <code>--cfl</code>. NFL,
+          IIHF, and Olympic Men's/Women's Hockey team lists are YAML/env-only
+          (<code>watch.nfl</code>, <code>GOALFEED_WATCH_NFL</code>, etc.).</p>
+        <p><strong>Next step:</strong> set those via <code>config.yaml</code> or a
+          <code>GOALFEED_WATCH_*</code> environment variable instead &mdash; see the full
+          table in the <a href="/docs/configuration/">configuration reference</a>.</p>
+
+        <h2>Config changes don't seem to take effect, and there's no error at all</h2>
+        <p><strong>Cause:</strong> Goalfeed looks for <code>./config.yaml</code> in the
+          <em>current working directory only</em> &mdash; there is no <code>--config</code>
+          flag to point it elsewhere. If it isn't found, the config read fails silently (the
+          error is discarded internally) and every key falls back to its zero value: no
+          watched teams, no Home Assistant URL, headless mode. Nothing crashes; you just get
+          an idle process.</p>
+        <p><strong>Next step:</strong> confirm you're launching Goalfeed from the same
+          directory as <code>config.yaml</code> (systemd/Supervisor users: check the
+          service's <code>WorkingDirectory</code>). If in doubt, set at least one option via
+          CLI flag or <code>GOALFEED_*</code> env var instead &mdash; those don't depend on the
+          working directory.</p>
+
+        <h2><code>POST /api/refresh</code> doesn't do anything</h2>
+        <p><strong>Cause:</strong> it's a stub left over from a refactor. It returns
+          <code>HTTP 200</code> and logs <code>"Refresh active games - placeholder
+          implementation"</code>, but doesn't actually refresh anything.</p>
+        <p><strong>Next step:</strong> don't rely on it. Active games refresh automatically
+          every minute (<code>checkLeaguesForActiveGames</code>); if you need it sooner,
+          restart the process.</p>
+
+        <h2>Home Assistant config changes I made through the web UI disappeared on restart</h2>
+        <p><strong>Cause:</strong> by default, <code>POST /api/homeassistant/config</code>
+          only updates the running process's in-memory config for the current session
+          &mdash; it does not write <code>config.yaml</code> to disk unless you've opted in.
+          The response message says so explicitly:
+          <code>"Configuration updated for this session only (not persisted to disk). Set
+          web.allow_config_writes: true in config.yaml to allow this API to write
+          config.yaml."</code></p>
+        <p><strong>Next step:</strong> edit <code>config.yaml</code> directly for changes that
+          should survive a restart, or set <code>web.allow_config_writes: true</code> if you
+          specifically want the runtime API to persist config to disk &mdash; see
+          <a href="/docs/security/">Security</a> for why this defaults to off.</p>
+
+        <h2>IIHF games show up in the API but no goal ever fires</h2>
+        <p><strong>Cause:</strong> this is expected, not a bug. IIHF has a full client and
+          service and answers <code>/api/games/history</code>, <code>/api/upcoming</code>, and
+          <code>/api/teams</code>, but it is never registered in the live polling loop, so no
+          Home Assistant event fires for it. See the <a href="/docs/leagues/">leagues
+          reference</a> for the full tier breakdown.</p>
+
+        <h2>Still stuck?</h2>
+        <p>Open an issue with the exact log line and your <code>config.yaml</code> (redact the
+          access token) at
+          <a href="https://github.com/goalfeed/goalfeed/issues">github.com/goalfeed/goalfeed/issues</a>
+          &mdash; that's the only supported contact channel.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-in">
+    <picture>
+      <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+      <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+    </picture>
+    <span class="footer-note">Self-hosted &middot; No account &middot; No tracking</span>
+    <span class="footer-links">
+      <a href="https://github.com/goalfeed/goalfeed">GitHub</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/goalfeed/goalfeed/issues">Issues</a>
+      <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
+    </span>
+    <span class="footer-meta">
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
+      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      official league data.
+    </span>
+  </div>
+</footer>
+
+<script src="/site.js" defer></script>
+</body>
+</html>

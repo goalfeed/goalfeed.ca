@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Goalfeed — the goal horn for your house</title>
+<meta name="description" content="Goalfeed watches live NHL, MLB, CFL and NFL games and fires a real-time event the instant your team scores — wire it into Home Assistant and let the goal horn, the lights, and the sirens do the rest. Self-hosted, free, open source.">
+<link rel="canonical" href="https://goalfeed.ca/">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f6fb" media="(prefers-color-scheme: light)">
+
+<!-- Strict CSP: static site, no third-party trackers/analytics, Google Fonts
+     stylesheet + inline style attributes only, one same-origin script file. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Goalfeed — the goal horn for your house">
+<meta property="og:description" content="Real-time goal events for NHL, MLB, CFL and NFL, fired straight into Home Assistant. Self-hosted, free, open source.">
+<meta property="og:url" content="https://goalfeed.ca/">
+<meta property="og:image" content="https://goalfeed.ca/assets/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Goalfeed — the goal horn for your house">
+<meta name="twitter:description" content="Real-time goal events for NHL, MLB, CFL and NFL, fired straight into Home Assistant.">
+<meta name="twitter:image" content="https://goalfeed.ca/assets/og-image.png">
+
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-in">
+    <a class="brand" href="/" aria-label="Goalfeed home">
+      <picture>
+        <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+        <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+      </picture>
+    </a>
+    <nav aria-label="Primary">
+      <a class="opt" href="#install">Install</a>
+      <a href="/docs/">Docs</a>
+      <a href="/docs/api/">API</a>
+      <a class="nav-cta" href="https://github.com/goalfeed/goalfeed">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero-inner">
+        <p class="eyebrow">Self-hosted · Open source</p>
+        <h1>Your team scores.<br>Your house reacts.</h1>
+        <p class="lede">
+          Goalfeed watches live NHL, MLB, CFL and NFL games for the teams you tell it to
+          follow, and fires a Home Assistant event the instant the score changes —
+          goal horn, lights, sirens, whatever you wire to it. It polls the same public
+          league data your browser already uses and talks straight to your own Home
+          Assistant instance. No account, no cloud, no subscription.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#install">Get started</a>
+          <a class="btn" href="https://github.com/goalfeed/goalfeed">View on GitHub</a>
+        </div>
+        <p class="meta" style="margin-top: var(--sp-4)">Self-hosted · No account · GitHub Issues only</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= THE MOMENT ================= -->
+  <section id="moment">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">The moment</p>
+        <h2>This is what a goal looks like, arriving.</h2>
+        <p class="lede">
+          The instant a watched team's score changes, Goalfeed fires a <code>goal</code>
+          event to Home Assistant, logs it, and pushes it over its WebSocket API too.
+          Below is a simulated feed cycling through NHL and MLB — the two leagues where a
+          score is always worth one point, so one score change is one event — showing
+          team, score, timestamp. That's genuinely all that arrives today; see the note
+          under the payload for why.
+        </p>
+      </div>
+
+      <div class="moment-grid">
+        <div class="stage" id="stage">
+          <div class="stage-head">
+            <span class="stage-title">Live feed</span>
+            <span class="stage-status">Watching NHL &amp; MLB</span>
+          </div>
+
+          <div class="scoreline">
+            <div class="team" id="team-away">
+              <div class="team-code tabular" id="away-code">WPG</div>
+              <div class="team-score tabular" id="away-score">1</div>
+            </div>
+            <span class="sep">–</span>
+            <div class="team" id="team-home">
+              <div class="team-code tabular" id="home-code">TOR</div>
+              <div class="team-score tabular" id="home-score">2</div>
+            </div>
+            <div class="clock">
+              <span id="clock-period">P2</span>
+              <b class="tabular" id="clock-time">14:32</b>
+            </div>
+          </div>
+
+          <ul class="event-feed" id="event-feed">
+            <li class="event-row is-goal">
+              <span class="ts tabular">20:41:03</span>
+              <span class="label"><b>GOAL</b> — TOR 2–1 WPG</span>
+            </li>
+            <li class="event-row">
+              <span class="ts tabular">20:36:55</span>
+              <span class="label">PERIOD START — P2</span>
+            </li>
+            <li class="event-row is-goal">
+              <span class="ts tabular">20:18:29</span>
+              <span class="label"><b>GOAL</b> — WPG 1–1 TOR</span>
+            </li>
+          </ul>
+
+          <p class="stage-foot">Simulated for this page — not a live connection.</p>
+        </div>
+
+        <div class="moment-copy">
+          <p class="lede">This is what actually reaches Home Assistant when that happens
+            — the fields every league reliably sends:</p>
+
+          <div class="code-block">
+            <div class="code-block-head">
+              <span class="code-block-lang">JSON — Home Assistant <code>goal</code> event</span>
+              <button class="copy-btn" type="button" data-copy-target="#payload-json">Copy</button>
+            </div>
+            <pre id="payload-json"><code>{
+  <span class="k">"id"</span>: "b3f0c9de-4b7a-4c1a-9c2e-1e5b6a2f6a10",
+  <span class="k">"teamCode"</span>: "TOR",
+  <span class="k">"teamName"</span>: "Toronto Maple Leafs",
+  <span class="k">"opponentCode"</span>: "WPG",
+  <span class="k">"opponentName"</span>: "Winnipeg Jets",
+  <span class="k">"leagueId"</span>: 1,
+  <span class="k">"leagueName"</span>: "NHL",
+  <span class="k">"gameCode"</span>: "2026020123",
+  <span class="k">"period"</span>: 2,
+  <span class="k">"gameState"</span>: {
+    <span class="k">"home"</span>: { "team": "TOR", "score": 2 },
+    <span class="k">"away"</span>: { "team": "WPG", "score": 1 },
+    <span class="k">"status"</span>: "active"
+  }
+}</code></pre>
+          </div>
+
+          <div class="callout" style="margin-top: var(--sp-5)">
+            <span class="callout-tag">Worth knowing</span>
+            <p>Detection is a raw score-diff, not a play-by-play feed — Goalfeed knows a
+              team's score went up, not who scored or how. So there's no scorer name here.
+              The full event also carries an internal <code>type</code> field, but it's
+              only populated for Olympic hockey today; NHL, MLB, CFL and NFL leave it
+              empty. Filter your automations on <code>teamCode</code> and
+              <code>leagueId</code>, not on <code>type</code>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= HOW IT WORKS ================= -->
+  <section id="how-it-works">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">How it works</p>
+        <h2>Four small steps, once a second.</h2>
+        <p class="lede">
+          No message queue, no database, no third-party goal API. Goalfeed is one Go
+          binary that polls, diffs, and pushes.
+        </p>
+      </div>
+
+      <div class="pipeline">
+        <div class="pipeline-step">
+          <h3>Poll</h3>
+          <p>Every second, Goalfeed re-checks each active game for the teams you're
+            watching — straight from NHL, MLB, CFL and NFL's own public APIs. NFL also
+            gets a push channel, ESPN's Fastcast WebSocket, layered on top for lower
+            latency.</p>
+        </div>
+        <div class="pipeline-step">
+          <h3>Diff</h3>
+          <p>It compares the new score to the last one it saw for that game. Any increase
+            becomes an event — there's no play-by-play involved, just the number going
+            up.</p>
+        </div>
+        <div class="pipeline-step">
+          <h3>Fire</h3>
+          <p>A <code>goal</code> event goes to Home Assistant, a matching message
+            broadcasts over the WebSocket API, and an entry lands in the local JSONL log
+            — all three, every time, nothing routed through a third party.</p>
+        </div>
+        <div class="pipeline-step">
+          <h3>React</h3>
+          <p>Your Home Assistant automation runs: goal horn, lights in team colours, a
+            script, whatever you've built.</p>
+        </div>
+      </div>
+
+      <div class="callout callout--info" style="margin-top: var(--sp-6)">
+        <span class="callout-tag">What "detects a score" really means</span>
+        <p>Every upstream source Goalfeed polls — NHL, MLB, CFL, NFL, and IIHF for the
+          leagues that go further — is an unofficial, undocumented public API, the same
+          one each league's own site uses. None of them are versioned or contractually
+          stable, so any of them can change shape without notice. And because detection is
+          a raw score-diff rather than a real event feed, it counts points, not plays: a
+          converted touchdown in the NFL or CFL currently fires as <strong>seven separate
+          <code>goal</code> events</strong> (one per point), not one. NHL and MLB don't have
+          this problem — a goal is always worth one point, so one score change is one
+          event, which is why the demo above sticks to those two. It's honest, it's simple,
+          and it's the thing to know before you wire an automation that assumes more
+          precision than that.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= LEAGUES ================= -->
+  <section id="leagues">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Leagues</p>
+        <h2>Four leagues fire goal events today.</h2>
+        <p class="lede">Two more have real code behind them but aren't part of the live
+          polling loop or a released build yet — shown here so the status is clear, not
+          because they're ready to use.</p>
+      </div>
+
+      <div class="league-grid">
+        <div class="league-card">
+          <div class="league-code">NHL</div>
+          <div class="league-name">National Hockey League</div>
+          <span class="badge badge--live">Live</span>
+        </div>
+        <div class="league-card">
+          <div class="league-code">MLB</div>
+          <div class="league-name">Major League Baseball</div>
+          <span class="badge badge--live">Live</span>
+        </div>
+        <div class="league-card">
+          <div class="league-code">CFL</div>
+          <div class="league-name">Canadian Football League</div>
+          <span class="badge badge--live">Live</span>
+        </div>
+        <div class="league-card">
+          <div class="league-code">NFL</div>
+          <div class="league-name">National Football League</div>
+          <span class="badge badge--live">Live</span>
+        </div>
+        <div class="league-card is-wip">
+          <div class="league-code">IIHF</div>
+          <div class="league-name">Int'l Ice Hockey Federation</div>
+          <span class="badge">API only</span>
+        </div>
+        <div class="league-card is-wip">
+          <div class="league-code">OLY</div>
+          <div class="league-name">Olympic hockey (M/W)</div>
+          <span class="badge badge--wip">In development</span>
+        </div>
+      </div>
+
+      <div class="table-scroll" style="margin-top: var(--sp-6)">
+        <table>
+          <thead>
+            <tr><th>League</th><th>Status</th><th>What that means</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>IIHF</td>
+              <td>API only</td>
+              <td>The client and service are fully built and power the web API's
+                schedule and history lookups, but IIHF isn't registered in the live
+                polling loop — no Home Assistant events fire for IIHF games yet.</td>
+            </tr>
+            <tr>
+              <td>Olympic hockey</td>
+              <td>In development</td>
+              <td>Wired into live goal detection in active development, but the code
+                isn't part of a committed, released build yet. Not something you can
+                install today.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= INSTALL ================= -->
+  <section id="install">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Install</p>
+        <h2>Three ways to run it.</h2>
+        <p class="lede">Pick the one that matches how you already run Home Assistant.
+          Full details, including every config option, are in the
+          <a href="/docs/install/">install docs</a> and
+          <a href="/docs/configuration/">configuration reference</a>.</p>
+      </div>
+
+      <div class="tabs install-panel" data-tabs>
+        <ul class="tab-list" role="tablist" aria-label="Install methods">
+          <li role="presentation"><button type="button" role="tab" id="tab-hassio" aria-selected="true" aria-controls="panel-hassio">Home Assistant add-on</button></li>
+          <li role="presentation"><button type="button" role="tab" id="tab-docker" aria-selected="false" aria-controls="panel-docker" tabindex="-1">Docker</button></li>
+          <li role="presentation"><button type="button" role="tab" id="tab-binary" aria-selected="false" aria-controls="panel-binary" tabindex="-1">Binary</button></li>
+        </ul>
+
+        <div class="tab-panel" id="panel-hassio" role="tabpanel" aria-labelledby="tab-hassio">
+          <p class="lede">The recommended path — no URL, no token, Home Assistant's
+            Supervisor handles auth automatically.</p>
+          <ol>
+            <li>In Home Assistant: <strong>Settings → Add-ons → Add-on Store</strong>, open
+              the <strong>⋮</strong> menu, choose <strong>Repositories</strong>, and add:</li>
+          </ol>
+          <div class="code-block">
+            <div class="code-block-head">
+              <span class="code-block-lang">repository url</span>
+              <button class="copy-btn" type="button" data-copy-target="#addon-repo">Copy</button>
+            </div>
+            <pre id="addon-repo"><code>https://github.com/goalfeed/hassio-goalfeed-repository</code></pre>
+          </div>
+          <ol start="2">
+            <li>Install the <strong>Goalfeed</strong> add-on from the store.</li>
+            <li>Open its <strong>Configuration</strong> tab and enter team codes:</li>
+          </ol>
+          <div class="code-block">
+            <div class="code-block-head">
+              <span class="code-block-lang">yaml</span>
+              <button class="copy-btn" type="button" data-copy-target="#addon-config">Copy</button>
+            </div>
+            <pre id="addon-config"><code>nhl_teams: "TOR,WPG"
+mlb_teams: "TOR,NYY"
+test_goals: false</code></pre>
+          </div>
+          <div class="callout">
+            <span class="callout-tag">Heads up</span>
+            <p>The add-on's Configuration tab currently exposes NHL and MLB only. To watch
+              CFL or NFL teams from the add-on, mount a <code>config.yaml</code> or set
+              <code>GOALFEED_WATCH_*</code> environment variables on the container — see
+              the <a href="/docs/home-assistant/">Home Assistant docs</a>.</p>
+          </div>
+          <ol start="4">
+            <li>Start the add-on — it auto-detects Home Assistant through the Supervisor
+              API, so there's nothing to authenticate.</li>
+            <li>Open the web UI from the sidebar (ingress) or
+              <code>http://homeassistant.local:8080</code>.</li>
+          </ol>
+        </div>
+
+        <div class="tab-panel" id="panel-docker" role="tabpanel" aria-labelledby="tab-docker" hidden>
+          <p class="lede">There's no published Docker image yet — build the repo's
+            <code>Dockerfile</code> yourself.</p>
+          <div class="code-block">
+            <div class="code-block-head">
+              <span class="code-block-lang">bash</span>
+              <button class="copy-btn" type="button" data-copy-target="#docker-cmd">Copy</button>
+            </div>
+            <pre id="docker-cmd"><code><span class="c"># clone and build</span>
+git clone https://github.com/goalfeed/goalfeed.git
+cd goalfeed
+docker build -t goalfeed .
+
+<span class="c"># run it — GOALFEED_WEB=true starts the API/UI without overriding the container's CMD</span>
+docker run -d --name goalfeed -p 8080:8080 \
+  -e GOALFEED_WEB=true \
+  -e GOALFEED_WATCH_NHL=WPG \
+  -e GOALFEED_HOME_ASSISTANT_URL=http://homeassistant.local:8123 \
+  -e GOALFEED_HOME_ASSISTANT_ACCESS_TOKEN=your-long-lived-token \
+  goalfeed</code></pre>
+          </div>
+          <div class="callout">
+            <span class="callout-tag">Worth knowing</span>
+            <p>This <code>Dockerfile</code> builds the Go binary only — it doesn't bundle
+              the React web UI, so this image serves the REST and WebSocket API but not
+              the scoreboard page. For the full web UI in a container, build the frontend
+              in yourself, or use the <a href="#tab-binary" data-tab-link="panel-binary">release
+              tarball</a> below, which ships both.</p>
+          </div>
+        </div>
+
+        <div class="tab-panel" id="panel-binary" role="tabpanel" aria-labelledby="tab-binary" hidden>
+          <p class="lede">Every push to <code>main</code> publishes a
+            <a href="https://github.com/goalfeed/goalfeed/releases/latest">GitHub Release</a>
+            for Linux, macOS and Windows (amd64/arm64/arm/386), each bundled with the built
+            web UI.</p>
+          <div class="code-block">
+            <div class="code-block-head">
+              <span class="code-block-lang">bash — requires the GitHub CLI</span>
+              <button class="copy-btn" type="button" data-copy-target="#binary-cmd">Copy</button>
+            </div>
+            <pre id="binary-cmd"><code><span class="c"># swap linux_amd64 for darwin_arm64, windows_amd64, etc.</span>
+gh release download --repo goalfeed/goalfeed --pattern "*linux_amd64.tar.gz"
+tar xzf goalfeed_*_linux_amd64.tar.gz
+./goalfeed --nhl WPG --web</code></pre>
+          </div>
+          <p class="lede">No <code>gh</code>? Grab the matching archive by hand from the
+            <a href="https://github.com/goalfeed/goalfeed/releases/latest">Releases page</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= HOME ASSISTANT AUTOMATION ================= -->
+  <section id="automation">
+    <div class="wrap">
+      <div class="automation-grid">
+        <div class="automation-copy">
+          <p class="eyebrow">Home Assistant</p>
+          <h2>The goal horn, wired up.</h2>
+          <p class="lede">
+            Goalfeed authenticates to Home Assistant with a long-lived access token (or,
+            on the add-on, the Supervisor handles it for you) and posts to
+            <code>/api/events/goal</code>. Every event Goalfeed sends — goal detections,
+            period-start notices, test goals — arrives under that same event type,
+            <code>goal</code>, regardless of sport. Filter on the event's
+            <code>teamCode</code>, not on its internal <code>type</code> field.
+          </p>
+          <ul class="moment-list">
+            <li><span class="n">01</span><span>Trigger on the <code>goal</code> event, filtered to your team's code.</span></li>
+            <li><span class="n">02</span><span>Play the goal horn on whatever media player is in the room.</span></li>
+            <li><span class="n">03</span><span>Flash the lights in team colour, then bring them back.</span></li>
+          </ul>
+          <p class="lede" style="margin-top: var(--sp-5)">Full walkthrough, including
+            per-team sensors and binary sensors Goalfeed also publishes, is in the
+            <a href="/docs/home-assistant/">Home Assistant guide</a>.</p>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">yaml — automations.yaml</span>
+            <button class="copy-btn" type="button" data-copy-target="#ha-yaml">Copy</button>
+          </div>
+          <pre id="ha-yaml"><code><span class="c"># Winnipeg Jets goal horn</span>
+automation:
+  - alias: "Goalfeed - Jets score"
+    trigger:
+      - platform: event
+        event_type: goal
+        event_data:
+          teamCode: WPG
+    action:
+      - service: media_player.play_media
+        target:
+          entity_id: media_player.living_room_speaker
+        data:
+          media_content_id: /local/sounds/goal_horn.mp3
+          media_content_type: music
+      - service: light.turn_on
+        target:
+          entity_id: light.living_room
+        data:
+          color_name: blue
+          flash: long
+      - delay: "00:00:03"
+      - service: light.turn_on
+        target:
+          entity_id: light.living_room
+        data:
+          color_name: white</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOR DEVELOPERS ================= -->
+  <section id="developers">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">For developers</p>
+        <h2>Home Assistant isn't the only consumer.</h2>
+        <p class="lede">
+          Start Goalfeed with <code>--web</code> and you get a plain REST API, a
+          WebSocket feed, and the bundled scoreboard UI, all on one port. Build a
+          physical goal-light rig, a Discord bot, a browser overlay — anything that can
+          make an HTTP request or open a socket.
+        </p>
+      </div>
+
+      <div class="dev-grid">
+        <div class="card">
+          <span class="card-tag">REST</span>
+          <h3>/api/games, /api/events, /api/teams…</h3>
+          <p>Active games, historical/upcoming games by date, recent events, team lists,
+            and Home Assistant status/config — all under <code>ApiResponse
+            {success, data, message}</code>. Full reference: <a href="/docs/api/">API
+            docs</a>, or Swagger UI at <code>/swagger/index.html</code> on your own
+            instance.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag">WebSocket</span>
+          <h3>ws://your-host:8080/ws</h3>
+          <p>Connects immediately to a <code>games_list</code> snapshot, then streams
+            <code>game_update</code>, <code>event</code>, and <code>log</code> messages
+            as they happen. No auth, no ping/pong required. Full message shapes:
+            <a href="/docs/websocket/">WebSocket docs</a>.</p>
+        </div>
+        <div class="card">
+          <span class="card-tag">Worth knowing</span>
+          <h3>No auth, open CORS, by design</h3>
+          <p>Both APIs accept unauthenticated requests from any origin — fine behind
+            Home Assistant ingress or on a home network, not something to expose directly
+            to the internet. See <a href="/docs/troubleshooting/">troubleshooting</a> if
+            something isn't reaching you.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-in">
+    <picture>
+      <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+      <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+    </picture>
+    <span class="footer-note">Self-hosted · No account · No tracking</span>
+    <span class="footer-links">
+      <a href="https://github.com/goalfeed/goalfeed">GitHub</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/goalfeed/goalfeed/issues">Issues</a>
+      <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
+    </span>
+    <span class="footer-meta">
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
+      team. Goalfeed polls each league's own public, unofficial APIs — none of it is
+      official league data.
+    </span>
+  </div>
+</footer>
+
+<script src="/site.js" defer></script>
+</body>
+</html>

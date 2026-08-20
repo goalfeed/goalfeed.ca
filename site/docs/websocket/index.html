@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WebSocket reference — Goalfeed docs</title>
+<meta name="description" content="Goalfeed's WebSocket contract: connection lifecycle, message envelope, and the real (not idealized) event schema.">
+<link rel="canonical" href="https://goalfeed.ca/docs/websocket/">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f6fb" media="(prefers-color-scheme: light)">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="WebSocket reference — Goalfeed docs">
+<meta property="og:description" content="Goalfeed's WebSocket contract: connection lifecycle, message envelope, and the real (not idealized) event schema.">
+<meta property="og:url" content="https://goalfeed.ca/docs/websocket/">
+<meta property="og:image" content="https://goalfeed.ca/assets/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="WebSocket reference — Goalfeed docs">
+<meta name="twitter:description" content="Goalfeed's WebSocket contract: connection lifecycle, message envelope, and the real (not idealized) event schema.">
+<meta name="twitter:image" content="https://goalfeed.ca/assets/og-image.png">
+
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-in">
+    <a class="brand" href="/" aria-label="Goalfeed home">
+      <picture>
+        <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+        <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+      </picture>
+    </a>
+    <nav aria-label="Primary">
+      <a class="opt" href="/#install">Install</a>
+      <a href="/docs/" aria-current="page">Docs</a>
+      <a href="/docs/api/">API</a>
+      <a class="nav-cta" href="https://github.com/goalfeed/goalfeed">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap" style="padding-block: var(--sp-8)">
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Goalfeed</a>
+      <span class="sep">/</span>
+      <a href="/docs/">Docs</a>
+      <span class="sep">/</span>
+      <span aria-current="page">WebSocket</span>
+    </nav>
+
+    <div class="doc-layout">
+      <nav class="doc-sidebar" aria-label="Docs">
+        <h2>Overview</h2>
+        <ul>
+          <li><a href="/docs/">Docs home</a></li>
+        </ul>
+        <h2>Tutorial</h2>
+        <ul>
+          <li><a href="/docs/getting-started/">Getting started</a></li>
+        </ul>
+        <h2>How-to</h2>
+        <ul>
+          <li><a href="/docs/install/">Install</a></li>
+          <li><a href="/docs/home-assistant/">Home Assistant automations</a></li>
+          <li><a href="/docs/troubleshooting/">Troubleshooting</a></li>
+        </ul>
+        <h2>Reference</h2>
+        <ul>
+          <li><a href="/docs/configuration/">Configuration</a></li>
+          <li><a href="/docs/api/">REST API</a></li>
+          <li><a href="/docs/websocket/" aria-current="page">WebSocket</a></li>
+          <li><a href="/docs/leagues/">Leagues</a></li>
+        </ul>
+        <h2>Explanation</h2>
+        <ul>
+          <li><a href="/docs/architecture/">Architecture</a></li>
+          <li><a href="/docs/security/">Security model</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc-content">
+        <h1>WebSocket reference</h1>
+        <p class="lede">The real-time push feed behind the bundled web UI: connection
+          lifecycle, message envelope, and what actually arrives in each message &mdash;
+          including where it differs from the repo's own <code>docs/WEBSOCKET.md</code>.</p>
+
+        <h2>Minimal working example</h2>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash &mdash; using websocat</span>
+            <button class="copy-btn" type="button" data-copy-target="#ws-minimal">Copy</button>
+          </div>
+          <pre id="ws-minimal"><code>websocat ws://localhost:8080/ws</code></pre>
+        </div>
+        <p>Connecting alone produces one message immediately &mdash; a full snapshot of every
+          active game, before you do anything else:</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">json</span>
+            <button class="copy-btn" type="button" data-copy-target="#ws-first">Copy</button>
+          </div>
+          <pre id="ws-first"><code>{ "type": "games_list", "data": [] }</code></pre>
+        </div>
+        <p>(An empty array is the correct, expected first message if nothing is active yet
+          &mdash; not an error.)</p>
+
+        <h2>Connection lifecycle</h2>
+        <ul>
+          <li><strong>Endpoint:</strong> <code>ws://&lt;host&gt;:&lt;port&gt;/ws</code>
+            (<code>wss://</code> if you terminate TLS in front of it &mdash; Goalfeed itself
+            doesn't).</li>
+          <li><strong>No authentication, all origins allowed</strong>
+            (<code>CheckOrigin</code> always returns <code>true</code>) &mdash; same posture as
+            the REST API, see <a href="/docs/security/">Security</a>.</li>
+          <li><strong>On connect:</strong> the server immediately sends a <code>games_list</code>
+            snapshot of every game currently in the in-memory store.</li>
+          <li><strong>Thereafter:</strong> the server pushes <code>game_update</code>,
+            <code>event</code>, <code>games_list</code>, and <code>log</code> messages as they
+            happen. There is no polling needed on the client side.</li>
+          <li><strong>No ping/pong required.</strong> The server does read incoming frames in a
+            loop, but only to detect disconnect &mdash; nothing in the server processes message
+            <em>content</em> sent by the client. This is a receive-only protocol in practice:
+            server &rarr; client.</li>
+          <li><strong>No reconnection support server-side.</strong> If the connection drops,
+            the client must reconnect and re-request state itself (a fresh connection gets a
+            new <code>games_list</code> snapshot automatically, so a naive "reconnect and
+            listen again" strategy is enough &mdash; there's no sequence number or replay to
+            manage).</li>
+          <li><strong>Broadcasts are non-blocking.</strong> Every broadcast uses
+            <code>select { case hub.broadcast &lt;- data: default: }</code> &mdash; if the
+            internal buffer (1024 messages) is full, the message is dropped rather than
+            blocking the sender. A slow or stalled client can silently miss messages instead of
+            slowing down everyone else; there's no back-pressure or delivery guarantee.</li>
+        </ul>
+
+        <h2>Message envelope</h2>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">json</span>
+            <button class="copy-btn" type="button" data-copy-target="#ws-envelope">Copy</button>
+          </div>
+          <pre id="ws-envelope"><code>{ "type": "games_list" | "game_update" | "event" | "log", "data": { ... } }</code></pre>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Type</th><th><code>data</code> shape</th><th>Sent when</th></tr></thead>
+            <tbody>
+              <tr><td><code>games_list</code></td><td>array of <code>models.Game</code></td>
+                <td>on connect, and whenever the active-games set changes</td></tr>
+              <tr><td><code>game_update</code></td><td>single <code>models.Game</code></td>
+                <td>a game's score/period/status changed</td></tr>
+              <tr><td><code>event</code></td><td>single <code>models.Event</code></td>
+                <td>a goal/score event fired &mdash; see the sharp edge below</td></tr>
+              <tr><td><code>log</code></td><td>single <code>models.AppLogEntry</code></td>
+                <td>an entry was appended to the app log (event delivery result, or a state
+                  change)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout">
+          <span class="callout-tag">Sharp edge: this doesn't match docs/WEBSOCKET.md</span>
+          <p>The repository's own <code>docs/WEBSOCKET.md</code> shows this example
+            <code>event</code> payload:</p>
+          <div class="code-block">
+            <div class="code-block-head">
+              <span class="code-block-lang">json &mdash; from docs/WEBSOCKET.md, NOT representative</span>
+            </div>
+            <pre><code>{
+  "type": "event",
+  "data": {
+    "type": "goal",
+    "description": "Goal scored by Player Name",
+    "teamCode": "TOR",
+    ...
+  }
+}</code></pre>
+          </div>
+          <p>As read from the current league services, <strong>NHL, MLB, NFL, and CFL never
+            set <code>Event.Type</code> or <code>Event.Description</code></strong> &mdash;
+            those fields are left at their Go zero values, <code>""</code>. A real
+            <code>event</code> message from any of the four leagues that actually fire live
+            goals looks like this instead:</p>
+          <div class="code-block">
+            <div class="code-block-head">
+              <span class="code-block-lang">json &mdash; what actually arrives, NHL/MLB/NFL/CFL</span>
+            </div>
+            <pre><code>{
+  "type": "event",
+  "data": {
+    "id": "...",
+    "type": "",
+    "description": "",
+    "teamCode": "WPG",
+    "teamName": "Winnipeg Jets",
+    "leagueId": 1,
+    "leagueName": "NHL",
+    "period": 2,
+    "score": { "homeScore": 2, "awayScore": 1, "homeTeam": "WPG", "awayTeam": "TOR" }
+  }
+}</code></pre>
+          </div>
+          <p>The <em>only</em> league service that currently populates <code>type</code> and
+            <code>description</code> is Olympic hockey &mdash; which is itself
+            untracked/work-in-progress (see the <a href="/docs/leagues/">leagues
+            reference</a>). If you're building a consumer, filter on <code>teamCode</code> and
+            <code>leagueId</code>, not on <code>data.type</code> &mdash; exactly the same
+            guidance as the <a href="/docs/home-assistant/">Home Assistant</a> event, since
+            both come from the same underlying <code>models.Event</code>.</p>
+        </div>
+
+        <h2>Field reference: <code>event</code> data</h2>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Field</th><th>Type</th><th>Populated for NHL/MLB/NFL/CFL?</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>string</td><td>yes</td></tr>
+              <tr><td><code>type</code></td><td>string (<code>EventType</code> enum)</td>
+                <td><strong>no</strong> &mdash; always <code>""</code></td></tr>
+              <tr><td><code>description</code></td><td>string</td>
+                <td><strong>no</strong> &mdash; always <code>""</code></td></tr>
+              <tr><td><code>teamCode</code> / <code>teamName</code></td><td>string</td><td>yes</td></tr>
+              <tr><td><code>opponentCode</code> / <code>opponentName</code></td><td>string</td><td>yes</td></tr>
+              <tr><td><code>leagueId</code> / <code>leagueName</code></td><td>int / string</td><td>yes</td></tr>
+              <tr><td><code>period</code></td><td>int</td><td>yes</td></tr>
+              <tr><td><code>score</code></td><td><code>{homeScore, awayScore, homeTeam, awayTeam}</code></td><td>yes</td></tr>
+              <tr><td><code>details</code></td><td>nested, sport-specific (<code>down</code>,
+                <code>inning</code>, <code>goalType</code>, ...)</td>
+                <td>partially &mdash; inconsistent across leagues, treat as best-effort</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Next</h2>
+        <p>Same event data reaching Home Assistant instead &mdash;
+          <a href="/docs/home-assistant/">Home Assistant automations</a>. Prefer polling? The
+          same data is available over <a href="/docs/api/">REST</a>.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-in">
+    <picture>
+      <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+      <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+    </picture>
+    <span class="footer-note">Self-hosted &middot; No account &middot; No tracking</span>
+    <span class="footer-links">
+      <a href="https://github.com/goalfeed/goalfeed">GitHub</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/goalfeed/goalfeed/issues">Issues</a>
+      <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
+    </span>
+    <span class="footer-meta">
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
+      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      official league data.
+    </span>
+  </div>
+</footer>
+
+<script src="/site.js" defer></script>
+</body>
+</html>

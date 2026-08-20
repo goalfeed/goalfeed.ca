@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security model — Goalfeed docs</title>
+<meta name="description" content="Goalfeed's threat model: no API authentication, a trusted-network design, and the two config keys that guard the Home Assistant token.">
+<link rel="canonical" href="https://goalfeed.ca/docs/security/">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f6fb" media="(prefers-color-scheme: light)">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Security model — Goalfeed docs">
+<meta property="og:description" content="Goalfeed's threat model: no API authentication, a trusted-network design, and the two config keys that guard the Home Assistant token.">
+<meta property="og:url" content="https://goalfeed.ca/docs/security/">
+<meta property="og:image" content="https://goalfeed.ca/assets/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Security model — Goalfeed docs">
+<meta name="twitter:description" content="Goalfeed's threat model: no API authentication, a trusted-network design, and the two config keys that guard the Home Assistant token.">
+<meta name="twitter:image" content="https://goalfeed.ca/assets/og-image.png">
+
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-in">
+    <a class="brand" href="/" aria-label="Goalfeed home">
+      <picture>
+        <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+        <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+      </picture>
+    </a>
+    <nav aria-label="Primary">
+      <a class="opt" href="/#install">Install</a>
+      <a href="/docs/" aria-current="page">Docs</a>
+      <a href="/docs/api/">API</a>
+      <a class="nav-cta" href="https://github.com/goalfeed/goalfeed">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap" style="padding-block: var(--sp-8)">
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Goalfeed</a>
+      <span class="sep">/</span>
+      <a href="/docs/">Docs</a>
+      <span class="sep">/</span>
+      <span aria-current="page">Security model</span>
+    </nav>
+
+    <div class="doc-layout">
+      <nav class="doc-sidebar" aria-label="Docs">
+        <h2>Overview</h2>
+        <ul>
+          <li><a href="/docs/">Docs home</a></li>
+        </ul>
+        <h2>Tutorial</h2>
+        <ul>
+          <li><a href="/docs/getting-started/">Getting started</a></li>
+        </ul>
+        <h2>How-to</h2>
+        <ul>
+          <li><a href="/docs/install/">Install</a></li>
+          <li><a href="/docs/home-assistant/">Home Assistant automations</a></li>
+          <li><a href="/docs/troubleshooting/">Troubleshooting</a></li>
+        </ul>
+        <h2>Reference</h2>
+        <ul>
+          <li><a href="/docs/configuration/">Configuration</a></li>
+          <li><a href="/docs/api/">REST API</a></li>
+          <li><a href="/docs/websocket/">WebSocket</a></li>
+          <li><a href="/docs/leagues/">Leagues</a></li>
+        </ul>
+        <h2>Explanation</h2>
+        <ul>
+          <li><a href="/docs/architecture/">Architecture</a></li>
+          <li><a href="/docs/security/" aria-current="page">Security model</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc-content">
+        <h1>Security model</h1>
+        <p class="lede">Goalfeed's threat model, stated plainly: it has no API
+          authentication and is designed to live on a trusted home network behind Home
+          Assistant, not on the open internet.</p>
+
+        <h2>The short version</h2>
+        <div class="callout">
+          <span class="callout-tag">Don't expose this to the internet</span>
+          <p>Neither the REST API nor the WebSocket feed require authentication, and CORS
+            accepts requests from any origin. This is a deliberate trade-off for a single-user,
+            home-network tool that talks to Home Assistant &mdash; not an oversight to be
+            "fixed" by bolting on a login screen. Run it behind Home Assistant's own ingress,
+            on a network you already trust, or behind a reverse proxy you control. Don't port-forward
+            it directly to a public IP.</p>
+        </div>
+
+        <h2>Why no auth, specifically</h2>
+        <p>Every endpoint under <code>/api</code> and the <code>/ws</code> feed accept any
+          request from any origin (<code>AllowOrigins: ["*"]</code>,
+          <code>AllowCredentials: true</code> on the REST side; the WebSocket upgrader's
+          <code>CheckOrigin</code> always returns <code>true</code>). Goalfeed's job is to sit
+          next to Home Assistant and talk to it, in the same trust boundary a Home Assistant
+          add-on already lives in &mdash; ingress is the access control layer, not something
+          Goalfeed reimplements. Two consequences follow from this, and both have a real
+          config key guarding them.</p>
+
+        <h2>1. The Home Assistant URL is validated to stop token exfiltration</h2>
+        <p>Goalfeed authenticates to Home Assistant with a long-lived access token, sent as a
+          bearer credential on every outbound request. That token is a real credential worth
+          protecting: <code>home_assistant.url</code> can be set through an unauthenticated
+          runtime endpoint (<code>POST /api/homeassistant/config</code>), an environment
+          variable, or a hand-edited <code>config.yaml</code>. If Goalfeed sent the token to
+          whatever host that value named without question, a poisoned or mistakenly-edited
+          config could redirect the token to an attacker-controlled server.</p>
+        <p>Every outbound Home Assistant request is validated first
+          (<code>utils.ValidateHomeAssistantURL</code>, called from
+          <code>targets/homeassistant/guard.go</code> immediately before any request goes out).
+          The rules:</p>
+        <ol>
+          <li>The URL must parse as absolute <code>http</code> or <code>https</code> &mdash;
+            never <code>file:</code>, <code>gopher:</code>, or anything else.</li>
+          <li>It must have a non-empty host.</li>
+          <li>Unless <code>home_assistant.allow_remote_url</code> is <code>true</code>, the
+            host must resolve to something clearly local: a loopback or RFC 1918/RFC 4193
+            private IP literal, or a hostname that's obviously local
+            (<code>localhost</code>, <code>homeassistant</code>,
+            <code>homeassistant.local</code>, <code>supervisor</code>, anything ending in
+            <code>.local</code>, or a bare single-label hostname with no dot).</li>
+        </ol>
+        <div class="callout callout--info">
+          <span class="callout-tag">Worth knowing</span>
+          <p><strong>Link-local addresses (<code>169.254.0.0/16</code>, <code>fe80::/10</code>)
+            are deliberately rejected even under the "private" rule</strong> &mdash; that range
+            is not treated as local, on purpose. It contains
+            <code>169.254.169.254</code>, the canonical cloud instance metadata endpoint used
+            by AWS/GCP/Azure to serve credentials to whatever is running on the host. If
+            Goalfeed ever runs on a cloud VM and a poisoned config pointed
+            <code>home_assistant.url</code> at that address, treating link-local as "safe
+            because private" would hand an attacker a path to the metadata service. Rejecting
+            it by default closes that off; there is no config key to re-enable link-local
+            specifically, only the broader <code>allow_remote_url</code> escape hatch below.</p>
+        </div>
+        <p>If your Home Assistant instance is genuinely remote (not on the same private
+          network as Goalfeed), set <code>home_assistant.allow_remote_url: true</code>
+          explicitly &mdash; this is an opt-in, not a default, and it relaxes only the
+          local-address check, not the scheme/host validation. See the exact rejection message
+          and next step on the <a href="/docs/troubleshooting/">troubleshooting page</a>, and
+          every key's type/default on the <a href="/docs/configuration/">configuration
+          reference</a>.</p>
+
+        <h2>2. The runtime config API no longer rewrites <code>config.yaml</code> by default</h2>
+        <p><code>POST /api/homeassistant/config</code> is unauthenticated, like every other
+          endpoint. Historically, posting to it could persist straight to
+          <code>config.yaml</code> on disk. Combined with no authentication, that meant anyone
+          who could reach the API at all could permanently rewrite the on-disk Home Assistant
+          URL and token &mdash; not just for the current process, but for every future restart.</p>
+        <p>By default now, that endpoint only updates the running process's in-memory
+          configuration for the current session; the response says so explicitly
+          (<code>"Configuration updated for this session only (not persisted to disk). Set
+          web.allow_config_writes: true in config.yaml to allow this API to write
+          config.yaml."</code>). A restart reverts to whatever is actually on disk or in the
+          environment. Set <code>web.allow_config_writes: true</code> only if you specifically
+          want this unauthenticated endpoint to be able to persist changes &mdash; understanding
+          that doing so means anyone who can reach the API can rewrite your config file on
+          disk.</p>
+
+        <h2>What's not covered here</h2>
+        <ul>
+          <li><strong>CORS is wide open</strong> (<code>AllowOrigins: ["*"]</code>,
+            credentials allowed) on the REST API. This is consistent with "no auth, trusted
+            network" &mdash; it is not a separate gap to file, but it does mean a malicious
+            page open in a browser on the same network as Goalfeed could call its API.</li>
+          <li><strong>The upstream league APIs are all unofficial and undocumented.</strong>
+            Goalfeed has no control over their availability or shape; see
+            <a href="/docs/architecture/">Architecture</a> for that risk, which is
+            operational, not a security boundary.</li>
+          <li><strong><code>GET /api/homeassistant/status</code> and
+            <code>GET /api/homeassistant/config</code> report whether a token is set, as a
+            boolean (<code>tokenSet</code>), never the token value itself.</strong> The token
+            is not disclosed by either endpoint.</li>
+        </ul>
+
+        <h2>Next</h2>
+        <p>Every config key mentioned above, with its default and env var &mdash;
+          <a href="/docs/configuration/">configuration reference</a>. The exact error text
+          when a URL gets rejected &mdash; <a href="/docs/troubleshooting/">Troubleshooting</a>.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-in">
+    <picture>
+      <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+      <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+    </picture>
+    <span class="footer-note">Self-hosted &middot; No account &middot; No tracking</span>
+    <span class="footer-links">
+      <a href="https://github.com/goalfeed/goalfeed">GitHub</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/goalfeed/goalfeed/issues">Issues</a>
+      <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
+    </span>
+    <span class="footer-meta">
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
+      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      official league data.
+    </span>
+  </div>
+</footer>
+
+<script src="/site.js" defer></script>
+</body>
+</html>

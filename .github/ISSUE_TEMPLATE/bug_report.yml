@@ -1,0 +1,43 @@
+name: Bug report
+description: Something on goalfeed.ca is broken, wrong, or misleading.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Quick check first — if this is actually about the Goalfeed **service**
+        (goal detection not firing, the API misbehaving, the Home Assistant integration) rather than this
+        website, please file it in [goalfeed/goalfeed](https://github.com/goalfeed/goalfeed/issues) instead.
+        Home Assistant add-on install/config issues go in
+        [goalfeed/hassio-goalfeed-repository](https://github.com/goalfeed/hassio-goalfeed-repository/issues).
+
+  - type: input
+    id: url
+    attributes:
+      label: Page URL
+      description: The goalfeed.ca page where you saw the problem.
+      placeholder: https://goalfeed.ca/docs/...
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      description: Browser and OS, e.g. "Chrome 128 on macOS 15" or "Safari on iOS 18".
+    validations:
+      required: true
+
+  - type: textarea
+    id: whats-wrong
+    attributes:
+      label: What's wrong?
+      description: Broken link, layout issue, factual error, typo — whatever it is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: Drag and drop an image here if it's a visual/layout issue.

@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Getting started — Goalfeed docs</title>
+<meta name="description" content="Install Goalfeed, wire it to Home Assistant, and see a goal event fire in under five minutes.">
+<link rel="canonical" href="https://goalfeed.ca/docs/getting-started/">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f6fb" media="(prefers-color-scheme: light)">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Getting started — Goalfeed docs">
+<meta property="og:description" content="Install Goalfeed, wire it to Home Assistant, and see a goal event fire in under five minutes.">
+<meta property="og:url" content="https://goalfeed.ca/docs/getting-started/">
+<meta property="og:image" content="https://goalfeed.ca/assets/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Getting started — Goalfeed docs">
+<meta name="twitter:description" content="Install Goalfeed, wire it to Home Assistant, and see a goal event fire in under five minutes.">
+<meta name="twitter:image" content="https://goalfeed.ca/assets/og-image.png">
+
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-in">
+    <a class="brand" href="/" aria-label="Goalfeed home">
+      <picture>
+        <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+        <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+      </picture>
+    </a>
+    <nav aria-label="Primary">
+      <a class="opt" href="/#install">Install</a>
+      <a href="/docs/" aria-current="page">Docs</a>
+      <a href="/docs/api/">API</a>
+      <a class="nav-cta" href="https://github.com/goalfeed/goalfeed">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap" style="padding-block: var(--sp-8)">
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Goalfeed</a>
+      <span class="sep">/</span>
+      <a href="/docs/">Docs</a>
+      <span class="sep">/</span>
+      <span aria-current="page">Getting started</span>
+    </nav>
+
+    <div class="doc-layout">
+      <nav class="doc-sidebar" aria-label="Docs">
+        <h2>Overview</h2>
+        <ul>
+          <li><a href="/docs/">Docs home</a></li>
+        </ul>
+        <h2>Tutorial</h2>
+        <ul>
+          <li><a href="/docs/getting-started/" aria-current="page">Getting started</a></li>
+        </ul>
+        <h2>How-to</h2>
+        <ul>
+          <li><a href="/docs/install/">Install</a></li>
+          <li><a href="/docs/home-assistant/">Home Assistant automations</a></li>
+          <li><a href="/docs/troubleshooting/">Troubleshooting</a></li>
+        </ul>
+        <h2>Reference</h2>
+        <ul>
+          <li><a href="/docs/configuration/">Configuration</a></li>
+          <li><a href="/docs/api/">REST API</a></li>
+          <li><a href="/docs/websocket/">WebSocket</a></li>
+          <li><a href="/docs/leagues/">Leagues</a></li>
+        </ul>
+        <h2>Explanation</h2>
+        <ul>
+          <li><a href="/docs/architecture/">Architecture</a></li>
+          <li><a href="/docs/security/">Security model</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc-content">
+        <h1>Getting started</h1>
+        <p class="lede">From a downloaded binary to a goal event you can see, without waiting
+          for a real game. About five minutes, no Home Assistant instance required for this
+          part.</p>
+
+        <div class="callout callout--info">
+          <span class="callout-tag">Before you start</span>
+          <p>You need a terminal and a Goalfeed binary for your platform. This tutorial uses
+            the <code>test-goals</code> option, which fires a synthetic event once a minute
+            through the exact same code path a real goal uses &mdash; so the "success" at the
+            end of this page is the real pipeline, not a mockup. Full install options
+            (Home Assistant add-on, Docker, source) are in the <a href="/docs/install/">install
+            guide</a>; this page uses the plain binary because it needs no add-on store and no
+            Home Assistant instance.</p>
+        </div>
+
+        <h2>1. Get a binary (about 1 minute)</h2>
+        <p>Download the archive for your platform from
+          <a href="https://github.com/goalfeed/goalfeed/releases/latest">the latest release</a>
+          and extract it. On Linux/macOS with the GitHub CLI installed:</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#gs-download">Copy</button>
+          </div>
+          <pre id="gs-download"><code><span class="c"># swap linux_amd64 for darwin_arm64, windows_amd64, etc. &mdash; see Install for the full list</span>
+gh release download --repo goalfeed/goalfeed --pattern "*linux_amd64.tar.gz"
+tar xzf goalfeed_*_linux_amd64.tar.gz
+cd goalfeed_*_linux_amd64 2>/dev/null || true</code></pre>
+        </div>
+        <p><strong>Expected result:</strong> a <code>goalfeed</code> binary (plus a
+          <code>web/frontend/build</code> directory bundled in the archive) in your current
+          directory.</p>
+
+        <h2>2. Write a minimal <code>config.yaml</code> (about 1 minute)</h2>
+        <p>In the same directory as the binary, create <code>config.yaml</code>:</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">config.yaml</span>
+            <button class="copy-btn" type="button" data-copy-target="#gs-config">Copy</button>
+          </div>
+          <pre id="gs-config"><code>watch:
+  nhl:
+    - WPG
+test-goals: true
+web: true
+web-port: "8099"</code></pre>
+        </div>
+        <p>No Home Assistant URL or token yet &mdash; that's deliberate. This step is about
+          proving the loop fires, not about wiring the goal horn (that's the
+          <a href="/docs/home-assistant/">next page</a>). There's no <code>--config</code> flag;
+          Goalfeed only ever looks for <code>./config.yaml</code> in the working directory it's
+          started from &mdash; see the <a href="/docs/configuration/">configuration
+          reference</a>.</p>
+
+        <h2>3. Run it (a few seconds)</h2>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#gs-run">Copy</button>
+          </div>
+          <pre id="gs-run"><code>./goalfeed</code></pre>
+        </div>
+        <p><strong>Expected output</strong> (real, captured &mdash; Goalfeed logs structured
+          JSON via zap, one line per event):</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">console</span>
+            <button class="copy-btn" type="button" data-copy-target="#gs-console">Copy</button>
+          </div>
+          <pre id="gs-console"><code>{"level":"info","ts":1787264681.604558,"caller":"goalfeed/main.go:171","msg":"Puck Drop! Initializing Goalfeed Process"}
+{"level":"info","ts":1787264681.604706,"caller":"goalfeed/main.go:181","msg":"Initializing Active Games"}
+{"level":"info","ts":1787264681.604725,"caller":"goalfeed/main.go:192","msg":"Updating Active Games"}
+{"level":"info","ts":1787264681.604807,"caller":"goalfeed/main.go:199","msg":"Checking for active NHL games"}
+&hellip;
+{"level":"info","ts":1787264681.6063309,"caller":"goalfeed/main.go:161","msg":"Starting Goalfeed in web mode"}
+&hellip;
+[GIN-debug] Listening and serving HTTP on :8099</code></pre>
+        </div>
+        <p>Leave this running &mdash; it keeps polling in the foreground. Open a second
+          terminal for the next step.</p>
+
+        <h2>4. Watch for the test goal (up to 1 minute)</h2>
+        <p><code>test-goals</code> fires on a one-minute ticker
+          (<code>time.NewTicker(1 * time.Minute)</code> in <code>main.go</code>), so the first
+          one lands somewhere between 0 and 60 seconds after startup &mdash; there's no way to
+          make it fire sooner, and no reason to make it fire slower. Poll the app log through
+          the REST API:</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#gs-curl">Copy</button>
+          </div>
+          <pre id="gs-curl"><code>curl -s "http://localhost:8099/api/logs?limit=1"</code></pre>
+        </div>
+        <p><strong>Expected output</strong> (real, captured from the run above &mdash;
+          reformatted for readability):</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">json</span>
+            <button class="copy-btn" type="button" data-copy-target="#gs-result">Copy</button>
+          </div>
+          <pre id="gs-result"><code>{
+  "id": "1787264741605724000-TEST-",
+  "type": "event",
+  "teamCode": "TEST",
+  "target": "ha:event:goal",
+  "success": false,
+  "error": "refusing to send Home Assistant request: home assistant url is empty",
+  "timestamp": "2026-08-20T17:25:41.605724-05:00"
+}</code></pre>
+        </div>
+        <p>That <code>"success": false</code> is expected and correct &mdash; there's no
+          Home Assistant configured yet, so Goalfeed refused to send the request rather than
+          silently drop it (see <a href="/docs/security/">Security</a> for why). What it
+          proves is the whole pipeline: config loaded, the ticker fired on schedule, the event
+          was built, and it's queryable a second later over the REST API &mdash; the same path
+          a real NHL goal takes. If the bundled web UI built (step 1's release archive
+          includes it), you can watch the same thing happen visually: open
+          <code>http://localhost:8099</code>, click the <strong>Logs</strong> tab, and the
+          entry appears there within the same minute, live over the WebSocket feed, with no
+          page refresh.</p>
+
+        <div class="callout">
+          <span class="callout-tag">This is the guaranteed part</span>
+          <p>This step doesn't depend on a real game being in progress, on any specific league
+            being in season, or on Home Assistant being reachable. It only depends on the
+            one-minute ticker, which always fires. That's why this tutorial uses
+            <code>test-goals</code> instead of "go watch for a real goal" &mdash; the latter
+            could mean waiting hours.</p>
+        </div>
+
+        <h2>What's next</h2>
+        <p>You've proven Goalfeed runs, polls, and logs an event end to end. From here:</p>
+        <ul>
+          <li>Point it at a real Home Assistant instance and get the goal horn and lights
+            firing &mdash; <a href="/docs/home-assistant/">Home Assistant automations</a>.</li>
+          <li>See every install channel (add-on, source, Docker's current caveats) &mdash;
+            <a href="/docs/install/">Install</a>.</li>
+          <li>Look up every config key, including the ones this page skipped (Home Assistant
+            URL/token, other leagues) &mdash; <a href="/docs/configuration/">Configuration
+            reference</a>.</li>
+          <li>Something not behaving as shown above? &mdash;
+            <a href="/docs/troubleshooting/">Troubleshooting</a>.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-in">
+    <picture>
+      <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+      <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+    </picture>
+    <span class="footer-note">Self-hosted &middot; No account &middot; No tracking</span>
+    <span class="footer-links">
+      <a href="https://github.com/goalfeed/goalfeed">GitHub</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/goalfeed/goalfeed/issues">Issues</a>
+      <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
+    </span>
+    <span class="footer-meta">
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
+      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      official league data.
+    </span>
+  </div>
+</footer>
+
+<script src="/site.js" defer></script>
+</body>
+</html>

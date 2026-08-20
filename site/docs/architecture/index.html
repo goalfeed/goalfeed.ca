@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture — Goalfeed docs</title>
+<meta name="description" content="Why Goalfeed is clients → services → targets, why it polls instead of pushing, and what a raw score-diff costs you.">
+<link rel="canonical" href="https://goalfeed.ca/docs/architecture/">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f6fb" media="(prefers-color-scheme: light)">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Architecture — Goalfeed docs">
+<meta property="og:description" content="Why Goalfeed is clients → services → targets, why it polls instead of pushing, and what a raw score-diff costs you.">
+<meta property="og:url" content="https://goalfeed.ca/docs/architecture/">
+<meta property="og:image" content="https://goalfeed.ca/assets/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Architecture — Goalfeed docs">
+<meta name="twitter:description" content="Why Goalfeed is clients → services → targets, why it polls instead of pushing, and what a raw score-diff costs you.">
+<meta name="twitter:image" content="https://goalfeed.ca/assets/og-image.png">
+
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-in">
+    <a class="brand" href="/" aria-label="Goalfeed home">
+      <picture>
+        <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+        <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+      </picture>
+    </a>
+    <nav aria-label="Primary">
+      <a class="opt" href="/#install">Install</a>
+      <a href="/docs/" aria-current="page">Docs</a>
+      <a href="/docs/api/">API</a>
+      <a class="nav-cta" href="https://github.com/goalfeed/goalfeed">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap" style="padding-block: var(--sp-8)">
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Goalfeed</a>
+      <span class="sep">/</span>
+      <a href="/docs/">Docs</a>
+      <span class="sep">/</span>
+      <span aria-current="page">Architecture</span>
+    </nav>
+
+    <div class="doc-layout">
+      <nav class="doc-sidebar" aria-label="Docs">
+        <h2>Overview</h2>
+        <ul>
+          <li><a href="/docs/">Docs home</a></li>
+        </ul>
+        <h2>Tutorial</h2>
+        <ul>
+          <li><a href="/docs/getting-started/">Getting started</a></li>
+        </ul>
+        <h2>How-to</h2>
+        <ul>
+          <li><a href="/docs/install/">Install</a></li>
+          <li><a href="/docs/home-assistant/">Home Assistant automations</a></li>
+          <li><a href="/docs/troubleshooting/">Troubleshooting</a></li>
+        </ul>
+        <h2>Reference</h2>
+        <ul>
+          <li><a href="/docs/configuration/">Configuration</a></li>
+          <li><a href="/docs/api/">REST API</a></li>
+          <li><a href="/docs/websocket/">WebSocket</a></li>
+          <li><a href="/docs/leagues/">Leagues</a></li>
+        </ul>
+        <h2>Explanation</h2>
+        <ul>
+          <li><a href="/docs/architecture/" aria-current="page">Architecture</a></li>
+          <li><a href="/docs/security/">Security model</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc-content">
+        <h1>Architecture</h1>
+        <p class="lede">Why Goalfeed is shaped clients &rarr; services &rarr; targets, why it
+          polls instead of subscribing to a push feed, and what a raw score-diff costs you in
+          exchange for that simplicity.</p>
+
+        <h2>Three layers, one direction</h2>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">text</span>
+          </div>
+          <pre><code>clients/leagues/*        services/leagues/*             targets/*
+(one per league;    &rarr;  (poll active games, diff   &rarr;  homeassistant (events + sensors)
+raw upstream API         old vs. new score/state,        applog        (JSONL event log)
+calls + response          detect goals &amp; period          notify        (WebSocket hooks for
+parsing)                  changes)                                      the web UI)</code></pre>
+        </div>
+        <ul>
+          <li><strong><code>clients/leagues/&lt;league&gt;/</code></strong> &mdash; thin HTTP
+            clients that call each league's upstream API and unmarshal the response into
+            league-specific structs. Nothing here understands "a goal" &mdash; it's pure
+            transport and parsing.</li>
+          <li><strong><code>services/leagues/&lt;league&gt;/</code></strong> &mdash; translates
+            client responses into Goalfeed's shared shapes
+            (<code>models.Game</code>/<code>GameState</code>/<code>Event</code>) and contains
+            the score-diff logic that decides a goal happened. Every league service implements
+            the same interface:
+            <div class="code-block">
+              <div class="code-block-head">
+                <span class="code-block-lang">go &mdash; services/leagues/interface.go</span>
+              </div>
+              <pre><code>type ILeagueService interface {
+	GetLeagueName() string
+	GetActiveGames(ret chan []models.Game)
+	GetUpcomingGames(ret chan []models.Game)
+	GetGamesByDate(date string, ret chan []models.Game)
+	GetGameUpdate(game models.Game, ret chan models.GameUpdate)
+	GetEvents(update models.GameUpdate, ret chan []models.Event)
+}</code></pre>
+            </div>
+          </li>
+          <li><strong><code>targets/</code></strong> &mdash; output sinks. <code>homeassistant</code>
+            posts events and per-team sensors; <code>applog</code> is the durable JSONL event
+            log (Goalfeed's only persistence); <code>notify</code> is a small set of
+            function-pointer hooks that let <code>targets/applog</code> push to WebSocket
+            clients without an import cycle back into <code>web/api</code>.</li>
+        </ul>
+        <p>Data flows one way through this stack: upstream API &rarr; client &rarr; service
+          &rarr; target. Nothing downstream ever calls back upstream, which is why adding a
+          league (or a new target) is a matter of implementing one interface rather than
+          threading changes through the whole codebase.</p>
+
+        <h2>Why polling, not push</h2>
+        <p>Every upstream source Goalfeed talks to &mdash; the NHL's own API, MLB's Stats API,
+          ESPN's site API for NFL, CFL's scoreboard JSON, IIHF's realtime endpoint,
+          <code>olympics.com</code>'s WMR API &mdash; is an unofficial, undocumented endpoint
+          each league's own site or app happens to use. None of them offer a public,
+          contractually stable subscription/webhook mechanism a third party can register for.
+          Polling on a fixed interval and diffing state is the only integration surface these
+          APIs actually offer; it's not a design preference over a "better" push option that
+          was left on the table.</p>
+        <p>The main loop runs a small set of tickers (<code>main.go</code>,
+          <code>NewTickerManager</code>):</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Interval</th><th>Task</th></tr></thead>
+            <tbody>
+              <tr><td>1 minute</td><td>Ask every registered league service for active games
+                among watched teams</td></tr>
+              <tr><td>1 second</td><td>Re-poll each active game, diff old vs. new score/state,
+                fire goal/period events</td></tr>
+              <tr><td>1 minute</td><td><code>test-goals</code>, if enabled &mdash; fire a
+                synthetic event through the same path a real goal uses</td></tr>
+              <tr><td>10 minutes</td><td>Publish "upcoming game" schedule sensors to Home
+                Assistant</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>One exception: NFL additionally gets push updates from ESPN's "Fastcast" WebSocket
+          (<code>services/leagues/nfl/fastcast.go</code>) layered on top of the poll loop when
+          <code>nfl.fastcast.enabled</code> is true (the default) &mdash; this is the one place
+          Goalfeed does subscribe to something resembling a real-time feed, because ESPN
+          happens to expose one for NFL specifically.</p>
+
+        <h2>Goal detection is a raw score-diff, and that has a cost</h2>
+        <p>For every league except Olympic hockey, a league service does not consume the
+          upstream API's actual play-by-play feed to learn <em>what</em> scored. It compares
+          the watched team's last-seen score to its current score and manufactures one event
+          per point of increase. For NHL and MLB, that's exactly correct: every goal and every
+          run is worth one point, so one point of increase is one real scoring event.</p>
+        <div class="callout">
+          <span class="callout-tag">The consequence for NFL and CFL</span>
+          <p>Football scoring isn't one point per score. A touchdown-plus-conversion is 7
+            points, a field goal is 3, a safety is 2. Because detection is a raw score-diff,
+            a single touchdown-plus-conversion fires <strong>seven separate <code>goal</code>
+            events</strong> in the same tick &mdash; not one "touchdown" event. Goalfeed
+            doesn't know it was a touchdown at all; it only knows the score went up by 7.
+            An automation that plays a sound or flashes a light per event, with no debounce,
+            will fire seven times for one score. See
+            <a href="/docs/home-assistant/">Home Assistant automations</a> for how to design
+            around this (delay-then-fire, or a state-based toggle instead of a per-event
+            action).</p>
+        </div>
+        <p>This also means NHL/MLB/NFL/CFL events carry an empty <code>Type</code> and
+          <code>Description</code> &mdash; there's no play-by-play data behind the score-diff
+          to describe. Only the (untracked, work-in-progress) Olympic hockey service consumes
+          a real event feed and populates those fields. See the
+          <a href="/docs/websocket/">WebSocket reference</a> for the exact payload shape this
+          produces.</p>
+
+        <h2>No database, by design</h2>
+        <p>The only durable state Goalfeed keeps is the JSONL app log
+          (<code>targets/applog</code>). Active-game state lives in
+          <code>targets/memoryStore</code>, a process-local, in-memory map behind a mutex
+          &mdash; not Redis, not a database, not shared across processes. Everything there is
+          lost on restart and rebuilt from the next poll cycle, which is acceptable because the
+          upstream APIs are themselves the source of truth for "what game is happening right
+          now" &mdash; there's nothing to reconcile on restart that a fresh poll doesn't
+          already reconstruct.</p>
+
+        <h2>Next</h2>
+        <p>The threat model that follows from an unauthenticated API sitting on top of this
+          &mdash; <a href="/docs/security/">Security</a>. Every league's exact tier &mdash;
+          <a href="/docs/leagues/">Leagues reference</a>.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-in">
+    <picture>
+      <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+      <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+    </picture>
+    <span class="footer-note">Self-hosted &middot; No account &middot; No tracking</span>
+    <span class="footer-links">
+      <a href="https://github.com/goalfeed/goalfeed">GitHub</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/goalfeed/goalfeed/issues">Issues</a>
+      <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
+    </span>
+    <span class="footer-meta">
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
+      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      official league data.
+    </span>
+  </div>
+</footer>
+
+<script src="/site.js" defer></script>
+</body>
+</html>

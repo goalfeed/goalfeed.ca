@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # This site has no package manager (no package.json, no build step) — the
+  # only thing here to keep updated is the Actions used in .github/workflows.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "ci"

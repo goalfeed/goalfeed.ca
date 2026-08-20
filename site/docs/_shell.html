@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  DOCS SHELL — reference template, not a published page.
+
+  This file is not linked from anywhere and 404.html/pages.yml do not treat
+  it specially; it exists so whoever writes site/docs/*.html content pages
+  (install.md -> install.html, configuration.html, api.html, etc.) has one
+  place to copy the header/footer/layout markup from, instead of reinventing
+  it per page. Copy this file to the real page name, replace every "FILL:"
+  placeholder below, and leave everything else structurally as-is.
+
+  Reuses (from ../styles.css, documented in ../DESIGN.md):
+    .doc-layout / .doc-sidebar / .doc-content  — two-column docs layout
+    .breadcrumb                                 — Home / Docs / Page trail
+    .table-scroll, .callout, .code-block, .badge — same components index.html uses
+
+  Update <title>, the meta description, canonical/og:url, and give the
+  current page's nav.doc-sidebar link aria-current="page" (see the example
+  aria-current="page" placement below — move it to match this page).
+-->
+<title>FILL: Page title — Goalfeed docs</title>
+<meta name="description" content="FILL: one sentence, same voice as the rest of the site.">
+<link rel="canonical" href="https://goalfeed.ca/docs/FILL/">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f6fb" media="(prefers-color-scheme: light)">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+<link rel="icon" href="../assets/favicon.ico" sizes="any">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="FILL: Page title — Goalfeed docs">
+<meta property="og:description" content="FILL: same sentence as the meta description above.">
+<meta property="og:url" content="https://goalfeed.ca/docs/FILL/">
+<meta property="og:image" content="https://goalfeed.ca/assets/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="FILL: Page title — Goalfeed docs">
+<meta name="twitter:description" content="FILL: same sentence as the meta description above.">
+<meta name="twitter:image" content="https://goalfeed.ca/assets/og-image.png">
+
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-in">
+    <a class="brand" href="/" aria-label="Goalfeed home">
+      <picture>
+        <source srcset="../assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+        <img src="../assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+      </picture>
+    </a>
+    <nav aria-label="Primary">
+      <a class="opt" href="/#install">Install</a>
+      <a href="/docs/" aria-current="page">Docs</a>
+      <a href="/docs/api/">API</a>
+      <a class="nav-cta" href="https://github.com/goalfeed/goalfeed">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap" style="padding-block: var(--sp-8)">
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Goalfeed</a>
+      <span class="sep">/</span>
+      <a href="/docs/">Docs</a>
+      <span class="sep">/</span>
+      <span aria-current="page">FILL: Page name</span>
+    </nav>
+
+    <div class="doc-layout">
+      <!-- Sidebar nav: same markup on every docs page, only aria-current
+           moves to whichever link matches the current page. Group headings
+           follow the Diátaxis split (tutorial / how-to / reference /
+           explanation) per PROJECT-STANDARDS.md's DOCS STANDARD — adjust
+           the groups/links below once the real page set exists; this is a
+           representative starter set, not a fixed list. -->
+      <nav class="doc-sidebar" aria-label="Docs">
+        <h2>Get started</h2>
+        <ul>
+          <li><a href="/docs/">Overview</a></li>
+          <li><a href="/docs/install/">Install</a></li>
+        </ul>
+        <h2>How-to</h2>
+        <ul>
+          <li><a href="/docs/home-assistant/">Home Assistant automations</a></li>
+          <li><a href="/docs/troubleshooting/">Troubleshooting</a></li>
+        </ul>
+        <h2>Reference</h2>
+        <ul>
+          <li><a href="/docs/configuration/">Configuration</a></li>
+          <li><a href="/docs/api/">REST API</a></li>
+          <li><a href="/docs/websocket/">WebSocket</a></li>
+        </ul>
+        <h2>Explanation</h2>
+        <ul>
+          <li><a href="/docs/architecture/">Architecture</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc-content">
+        <h1>FILL: Page title</h1>
+        <p class="lede">FILL: one or two sentences — what this page covers and who it's for,
+          same voice as the rest of the site (see branding/BRAND.md).</p>
+
+        <!-- FILL: page body. Reuse .callout, .code-block, .table-scroll,
+             .badge from ../styles.css — see ../DESIGN.md for usage of each.
+             Reference pages: worked example before the option table
+             (PROJECT-STANDARDS.md DOCS STANDARD). -->
+
+        <h2>Example section heading</h2>
+        <p>Body copy goes here.</p>
+
+        <div class="callout callout--info">
+          <span class="callout-tag">Worth knowing</span>
+          <p>FILL: a "good to know" aside — ice-accented, not the warning color.</p>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#example-code">Copy</button>
+          </div>
+          <pre id="example-code"><code>FILL: a real command and its real output</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-in">
+    <picture>
+      <source srcset="../assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+      <img src="../assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+    </picture>
+    <span class="footer-note">Self-hosted · No account · No tracking</span>
+    <span class="footer-links">
+      <a href="https://github.com/goalfeed/goalfeed">GitHub</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/goalfeed/goalfeed/issues">Issues</a>
+      <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
+    </span>
+    <span class="footer-meta">
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
+      team. Goalfeed polls each league's own public, unofficial APIs — none of it is
+      official league data.
+    </span>
+  </div>
+</footer>
+
+<script src="../site.js" defer></script>
+</body>
+</html>

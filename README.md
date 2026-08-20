@@ -1,34 +1,71 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+<picture>
+  <source srcset="site/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+  <img src="site/assets/wordmark-dark.svg" alt="Goalfeed" width="360" height="91">
+</picture>
 
-## Getting Started
+# goalfeed.ca
 
-First, run the development server:
+This repository is the source for [goalfeed.ca](https://goalfeed.ca), the marketing/docs site for the
+[Goalfeed](https://github.com/goalfeed/goalfeed) project.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+The site is hand-written static HTML and CSS — no framework, no build step, no `package.json`. What's
+in `site/` is what gets deployed, byte for byte.
+
+## Directory layout
+
+```
+branding/
+├── BRAND.md              # canonical brand: palette, voice, mark usage — read this first
+├── contrast.py            # recomputes the contrast tables in BRAND.md
+├── wordmark-dark.svg       # wordmark master, dark grounds
+├── wordmark-light.svg      # wordmark master, light grounds
+├── mark.svg                # goal-light mark alone (favicon/avatar source)
+└── build.py                 # generates favicons, apple-touch-icon, OG card from the masters above
+
+site/
+├── index.html      # home page
+├── 404.html        # not-found page
+├── styles.css      # shared design system — read site/DESIGN.md first
+├── site.js         # vanilla JS: install tabs, copy buttons, demo feed
+├── DESIGN.md       # how styles.css implements branding/BRAND.md; component reference
+├── README.md       # generation/deploy/preview details for this directory
+├── assets/         # generated only — favicons, OG card, wordmark copies (branding/build.py)
+├── docs/           # documentation pages, plus _shell.html (reference template, not published)
+├── CNAME           # custom domain (goalfeed.ca) for GitHub Pages
+└── .nojekyll       # tells GitHub Pages not to run Jekyll over the output
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Local preview
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+No install, no build. From the repo root:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+```bash
+cd site
+python3 -m http.server 8099
+```
 
-## Learn More
+Then open http://localhost:8099 in a browser.
 
-To learn more about Next.js, take a look at the following resources:
+## Brand assets
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+`branding/BRAND.md` is canonical for the palette, voice, and mark usage rules.
+Everything under `site/assets/` is generated from `branding/*.svg` by
+`branding/build.py` — never hand-edit those files. To regenerate:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+```bash
+python3 branding/build.py
+```
 
-## Deploy on Vercel
+Requires `rsvg-convert` (librsvg) and Pillow (`pip install pillow`); see
+`site/README.md` for details.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploys
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Pushing to `main` triggers `.github/workflows/pages.yml`, which packages the `site/` directory and
+publishes it via GitHub Pages to the custom domain goalfeed.ca. There is no build job — the workflow
+just checks out the repo and uploads `site/` as-is.
+
+## Related
+
+The main Goalfeed project (the goal-detection service this site documents) lives at
+[github.com/goalfeed/goalfeed](https://github.com/goalfeed/goalfeed).

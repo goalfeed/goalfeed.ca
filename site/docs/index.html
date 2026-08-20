@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docs — Goalfeed docs</title>
+<meta name="description" content="Goalfeed documentation: tutorial, how-to guides, reference, and design explanation.">
+<link rel="canonical" href="https://goalfeed.ca/docs/">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f6fb" media="(prefers-color-scheme: light)">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Docs — Goalfeed docs">
+<meta property="og:description" content="Goalfeed documentation: tutorial, how-to guides, reference, and design explanation.">
+<meta property="og:url" content="https://goalfeed.ca/docs/">
+<meta property="og:image" content="https://goalfeed.ca/assets/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Docs — Goalfeed docs">
+<meta name="twitter:description" content="Goalfeed documentation: tutorial, how-to guides, reference, and design explanation.">
+<meta name="twitter:image" content="https://goalfeed.ca/assets/og-image.png">
+
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-in">
+    <a class="brand" href="/" aria-label="Goalfeed home">
+      <picture>
+        <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+        <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+      </picture>
+    </a>
+    <nav aria-label="Primary">
+      <a class="opt" href="/#install">Install</a>
+      <a href="/docs/" aria-current="page">Docs</a>
+      <a href="/docs/api/">API</a>
+      <a class="nav-cta" href="https://github.com/goalfeed/goalfeed">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap" style="padding-block: var(--sp-8)">
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Goalfeed</a>
+      <span class="sep">/</span>
+      <a href="/docs/">Docs</a>
+    </nav>
+
+    <div class="doc-layout">
+      <nav class="doc-sidebar" aria-label="Docs">
+        <h2>Overview</h2>
+        <ul>
+          <li><a href="/docs/" aria-current="page">Docs home</a></li>
+        </ul>
+        <h2>Tutorial</h2>
+        <ul>
+          <li><a href="/docs/getting-started/">Getting started</a></li>
+        </ul>
+        <h2>How-to</h2>
+        <ul>
+          <li><a href="/docs/install/">Install</a></li>
+          <li><a href="/docs/home-assistant/">Home Assistant automations</a></li>
+          <li><a href="/docs/troubleshooting/">Troubleshooting</a></li>
+        </ul>
+        <h2>Reference</h2>
+        <ul>
+          <li><a href="/docs/configuration/">Configuration</a></li>
+          <li><a href="/docs/api/">REST API</a></li>
+          <li><a href="/docs/websocket/">WebSocket</a></li>
+          <li><a href="/docs/leagues/">Leagues</a></li>
+        </ul>
+        <h2>Explanation</h2>
+        <ul>
+          <li><a href="/docs/architecture/">Architecture</a></li>
+          <li><a href="/docs/security/">Security model</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc-content">
+        <h1>Goalfeed docs</h1>
+        <p class="lede">Self-hosted goal detection for NHL, MLB, CFL, and NFL &mdash; fires a
+          Home Assistant event the instant your team scores, or streams the same thing over
+          REST and WebSocket for anything else you want to build.</p>
+
+        <p>This documentation follows the
+          <a href="https://diataxis.fr">Diátaxis</a> split: a tutorial to learn by doing,
+          how-to guides for specific tasks, reference for exhaustive lookup, and explanation
+          for the reasoning behind how Goalfeed works. Each mode stays in its own page &mdash;
+          the reference pages don't narrate, and the tutorial doesn't try to be exhaustive.</p>
+
+        <h2>New to Goalfeed?</h2>
+        <div class="dev-grid">
+          <div class="card">
+            <span class="card-tag">Tutorial</span>
+            <h3><a href="/docs/getting-started/">Getting started</a></h3>
+            <p>Binary to a visible goal event in about five minutes, using
+              <code>test-goals</code> so you don't wait for a real game.</p>
+          </div>
+        </div>
+
+        <h2>How-to guides</h2>
+        <p>Task-oriented recipes for a specific outcome.</p>
+        <div class="dev-grid">
+          <div class="card">
+            <span class="card-tag">Install</span>
+            <h3><a href="/docs/install/">Install</a></h3>
+            <p>Every channel: Home Assistant add-on, prebuilt binaries, from source, and
+              Docker's current caveats.</p>
+          </div>
+          <div class="card">
+            <span class="card-tag">Home Assistant</span>
+            <h3><a href="/docs/home-assistant/">Home Assistant automations</a></h3>
+            <p>The event that fires, and real working automation YAML for the goal horn and a
+              light flash.</p>
+          </div>
+          <div class="card">
+            <span class="card-tag">Troubleshooting</span>
+            <h3><a href="/docs/troubleshooting/">Troubleshooting</a></h3>
+            <p>Real error text Goalfeed produces, and the next step for each.</p>
+          </div>
+        </div>
+
+        <h2>Reference</h2>
+        <p>Exhaustive, dense, and neutral &mdash; every key, endpoint, and message type with
+          its type, default, and a worked example.</p>
+        <div class="dev-grid">
+          <div class="card">
+            <span class="card-tag">Config</span>
+            <h3><a href="/docs/configuration/">Configuration</a></h3>
+            <p>Every CLI flag, YAML key, and <code>GOALFEED_*</code> env var.</p>
+          </div>
+          <div class="card">
+            <span class="card-tag">REST</span>
+            <h3><a href="/docs/api/">API</a></h3>
+            <p>Every HTTP endpoint: params, response shape, a runnable <code>curl</code>
+              example.</p>
+          </div>
+          <div class="card">
+            <span class="card-tag">WebSocket</span>
+            <h3><a href="/docs/websocket/">WebSocket</a></h3>
+            <p>Connection lifecycle, message envelope, and the real (not idealized) event
+              schema.</p>
+          </div>
+          <div class="card">
+            <span class="card-tag">Leagues</span>
+            <h3><a href="/docs/leagues/">Leagues</a></h3>
+            <p>Upstream source and honest support tier for every league.</p>
+          </div>
+        </div>
+
+        <h2>Explanation</h2>
+        <p>How Goalfeed is put together, and why, for readers who want the reasoning rather
+          than a recipe.</p>
+        <div class="dev-grid">
+          <div class="card">
+            <span class="card-tag">Design</span>
+            <h3><a href="/docs/architecture/">Architecture</a></h3>
+            <p>Clients &rarr; services &rarr; targets, why polling instead of push, and what a
+              raw score-diff costs you.</p>
+          </div>
+          <div class="card">
+            <span class="card-tag">Threat model</span>
+            <h3><a href="/docs/security/">Security</a></h3>
+            <p>No API authentication by design, and the two config keys that guard the Home
+              Assistant token.</p>
+          </div>
+        </div>
+
+        <h2>Elsewhere</h2>
+        <p>Source and issues: <a href="https://github.com/goalfeed/goalfeed">github.com/goalfeed/goalfeed</a>.
+          Questions and bug reports go through
+          <a href="https://github.com/goalfeed/goalfeed/issues">GitHub Issues</a> &mdash;
+          that's the only supported contact channel.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-in">
+    <picture>
+      <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+      <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+    </picture>
+    <span class="footer-note">Self-hosted &middot; No account &middot; No tracking</span>
+    <span class="footer-links">
+      <a href="https://github.com/goalfeed/goalfeed">GitHub</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/goalfeed/goalfeed/issues">Issues</a>
+      <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
+    </span>
+    <span class="footer-meta">
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
+      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      official league data.
+    </span>
+  </div>
+</footer>
+
+<script src="/site.js" defer></script>
+</body>
+</html>

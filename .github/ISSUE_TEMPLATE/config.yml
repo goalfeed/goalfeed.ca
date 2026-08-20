@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Goalfeed service issue
+    url: https://github.com/goalfeed/goalfeed/issues
+    about: Bugs or feature requests for the Go service, its API, or the Home Assistant integration.
+  - name: Home Assistant add-on issue
+    url: https://github.com/goalfeed/hassio-goalfeed-repository/issues
+    about: Problems installing, configuring, or updating the Home Assistant Supervisor add-on.
+  - name: Live site
+    url: https://goalfeed.ca
+    about: The deployed site this repo builds — check whether the issue is already fixed on main.
+  - name: Security vulnerability
+    url: https://github.com/goalfeed/goalfeed.ca/security/advisories/new
+    about: Please report vulnerabilities privately rather than as a public issue — see SECURITY.md.

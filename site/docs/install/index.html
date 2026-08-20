@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install — Goalfeed docs</title>
+<meta name="description" content="Every way to run Goalfeed: the Home Assistant add-on, a release binary, from source, or Docker (and why Docker is currently broken).">
+<link rel="canonical" href="https://goalfeed.ca/docs/install/">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f6fb" media="(prefers-color-scheme: light)">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Install — Goalfeed docs">
+<meta property="og:description" content="Every way to run Goalfeed: the Home Assistant add-on, a release binary, from source, or Docker (and why Docker is currently broken).">
+<meta property="og:url" content="https://goalfeed.ca/docs/install/">
+<meta property="og:image" content="https://goalfeed.ca/assets/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Install — Goalfeed docs">
+<meta name="twitter:description" content="Every way to run Goalfeed: the Home Assistant add-on, a release binary, from source, or Docker (and why Docker is currently broken).">
+<meta name="twitter:image" content="https://goalfeed.ca/assets/og-image.png">
+
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-in">
+    <a class="brand" href="/" aria-label="Goalfeed home">
+      <picture>
+        <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+        <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+      </picture>
+    </a>
+    <nav aria-label="Primary">
+      <a class="opt" href="/#install">Install</a>
+      <a href="/docs/" aria-current="page">Docs</a>
+      <a href="/docs/api/">API</a>
+      <a class="nav-cta" href="https://github.com/goalfeed/goalfeed">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap" style="padding-block: var(--sp-8)">
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Goalfeed</a>
+      <span class="sep">/</span>
+      <a href="/docs/">Docs</a>
+      <span class="sep">/</span>
+      <span aria-current="page">Install</span>
+    </nav>
+
+    <div class="doc-layout">
+      <nav class="doc-sidebar" aria-label="Docs">
+        <h2>Overview</h2>
+        <ul>
+          <li><a href="/docs/">Docs home</a></li>
+        </ul>
+        <h2>Tutorial</h2>
+        <ul>
+          <li><a href="/docs/getting-started/">Getting started</a></li>
+        </ul>
+        <h2>How-to</h2>
+        <ul>
+          <li><a href="/docs/install/" aria-current="page">Install</a></li>
+          <li><a href="/docs/home-assistant/">Home Assistant automations</a></li>
+          <li><a href="/docs/troubleshooting/">Troubleshooting</a></li>
+        </ul>
+        <h2>Reference</h2>
+        <ul>
+          <li><a href="/docs/configuration/">Configuration</a></li>
+          <li><a href="/docs/api/">REST API</a></li>
+          <li><a href="/docs/websocket/">WebSocket</a></li>
+          <li><a href="/docs/leagues/">Leagues</a></li>
+        </ul>
+        <h2>Explanation</h2>
+        <ul>
+          <li><a href="/docs/architecture/">Architecture</a></li>
+          <li><a href="/docs/security/">Security model</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc-content">
+        <h1>Install</h1>
+        <p class="lede">Every supported way to run Goalfeed, in the order most people should
+          try them, with the caveats stated up front rather than discovered later.</p>
+
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash &mdash; fastest working path</span>
+            <button class="copy-btn" type="button" data-copy-target="#inst-fastest">Copy</button>
+          </div>
+          <pre id="inst-fastest"><code>gh release download --repo goalfeed/goalfeed --pattern "*linux_amd64.tar.gz"
+tar xzf goalfeed_*_linux_amd64.tar.gz
+./goalfeed --nhl WPG --web</code></pre>
+        </div>
+        <p>That's the "binary from Releases" method below, the one that needs the least
+          explanation. The sections after it cover the Home Assistant add-on (best if you
+          already run HA), building from source, and Docker (currently broken as shipped
+          &mdash; read that section before trying it).</p>
+
+        <h2 id="hassio">Home Assistant add-on</h2>
+        <p>Best choice if Goalfeed's only job is talking to your existing Home Assistant
+          instance &mdash; the Supervisor handles authentication for you, so there's no URL or
+          token to configure.</p>
+        <ol>
+          <li>In Home Assistant: <strong>Settings &rarr; Add-ons &rarr; Add-on Store</strong>,
+            open the <strong>&#8942;</strong> menu, choose <strong>Repositories</strong>, and
+            add:
+            <div class="code-block">
+              <div class="code-block-head">
+                <span class="code-block-lang">repository url</span>
+                <button class="copy-btn" type="button" data-copy-target="#inst-repo">Copy</button>
+              </div>
+              <pre id="inst-repo"><code>https://github.com/goalfeed/hassio-goalfeed-repository</code></pre>
+            </div>
+          </li>
+          <li>Install the <strong>Goalfeed</strong> add-on from the store.</li>
+          <li>Open its <strong>Configuration</strong> tab and enter team codes:
+            <div class="code-block">
+              <div class="code-block-head">
+                <span class="code-block-lang">yaml</span>
+                <button class="copy-btn" type="button" data-copy-target="#inst-addoncfg">Copy</button>
+              </div>
+              <pre id="inst-addoncfg"><code>nhl_teams: "TOR,WPG"
+mlb_teams: "TOR,NYY"
+test_goals: false</code></pre>
+            </div>
+          </li>
+          <li>Start the add-on ("Start on boot" and "Watchdog" are worth enabling). It runs
+            <code>./goalfeed --web --web-port 8080</code> internally with
+            <code>SUPERVISOR_API</code> auto-exported, so it reaches Home Assistant through
+            the Supervisor proxy without any URL/token configuration.</li>
+          <li>Open the web UI from the Home Assistant sidebar (ingress), or
+            <code>http://homeassistant.local:8080</code>.</li>
+        </ol>
+        <div class="callout">
+          <span class="callout-tag">Caveat</span>
+          <p>The add-on's <code>config.json</code> manifest only exposes <code>nhl_teams</code>
+            and <code>mlb_teams</code> (plus <code>test_goals</code>) as options &mdash; there
+            is no CFL, NFL, IIHF, or Olympic option in the Configuration tab, even though the
+            underlying binary supports those leagues. To watch CFL or NFL teams from the
+            add-on, you need to mount your own <code>config.yaml</code> into the container or
+            set <code>GOALFEED_WATCH_CFL</code> / <code>GOALFEED_WATCH_NFL</code> environment
+            variables on it directly &mdash; there's no in-UI path for this today. See the
+            <a href="/docs/configuration/">configuration reference</a> for every key.</p>
+        </div>
+        <p>Supported architectures for the add-on's Docker image: <strong>aarch64</strong> and
+          <strong>amd64</strong> only &mdash; narrower than the binary release matrix below
+          (no armhf/armv7/386 add-on image).</p>
+
+        <h2 id="binary">Binary from GitHub Releases</h2>
+        <p>Every push to <code>main</code> publishes a
+          <a href="https://github.com/goalfeed/goalfeed/releases/latest">GitHub Release</a>
+          built by GoReleaser. Each archive bundles the Go binary <em>and</em> the built React
+          web UI (GoReleaser's build hook runs <code>npm ci &amp;&amp; npm run build</code>
+          before packaging), so this is the one channel where the frontend build question
+          never comes up.</p>
+        <p>Exact platforms shipped for the latest tag, <code>v1.0.36</code> (verified against
+          the release's actual asset list, not just the build config):</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>OS</th><th>Architectures</th></tr></thead>
+            <tbody>
+              <tr><td>Linux</td><td><code>amd64</code>, <code>arm64</code>, <code>386</code>,
+                <code>armv6</code>, <code>armv7</code></td></tr>
+              <tr><td>Windows</td><td><code>amd64</code>, <code>arm64</code>, <code>386</code>,
+                <code>armv6</code>, <code>armv7</code></td></tr>
+              <tr><td>macOS (Darwin)</td><td><code>amd64</code>, <code>arm64</code> only
+                &mdash; Go dropped 32-bit and ARMv6/v7 Darwin support years ago, so those
+                combinations from the build matrix simply don't produce a macOS asset</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash &mdash; requires the GitHub CLI</span>
+            <button class="copy-btn" type="button" data-copy-target="#inst-binary">Copy</button>
+          </div>
+          <pre id="inst-binary"><code><span class="c"># swap linux_amd64 for darwin_arm64, windows_386, linux_armv7, etc.</span>
+gh release download --repo goalfeed/goalfeed --pattern "*linux_amd64.tar.gz"
+tar xzf goalfeed_*_linux_amd64.tar.gz
+./goalfeed --nhl WPG --web</code></pre>
+        </div>
+        <p>No <code>gh</code>? Download the matching archive by hand from the
+          <a href="https://github.com/goalfeed/goalfeed/releases/latest">Releases page</a>.
+          Each one contains the <code>goalfeed</code> (or <code>goalfeed.exe</code>) binary,
+          <code>README.md</code>, and the prebuilt <code>web/frontend/build/</code> directory
+          &mdash; keep that directory alongside the binary so the web UI serves.</p>
+
+        <h2 id="source">From source</h2>
+        <p>Requires <strong>Go 1.24+</strong> and <strong>Node 20+</strong> (for the web UI).</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#inst-source">Copy</button>
+          </div>
+          <pre id="inst-source"><code>git clone https://github.com/goalfeed/goalfeed.git
+cd goalfeed
+make build   <span class="c"># npm ci && npm run build (frontend), then go build -o goalfeed .</span>
+./goalfeed --nhl WPG --web</code></pre>
+        </div>
+        <p>Other <code>Makefile</code> targets: <code>make backend</code> (Go binary only,
+          skips the frontend &mdash; you get the API-only fallback page), <code>make
+          frontend</code> (React build only), and <code>./dev.sh dev</code> for an
+          <code>fswatch</code>-based hot-reload loop (documented in <code>DEV.md</code>).</p>
+
+        <h2 id="docker">Docker</h2>
+        <div class="callout">
+          <span class="callout-tag">Currently broken as shipped</span>
+          <p>The repo's own <code>Dockerfile</code> builds from
+            <code>FROM golang:1.21</code>, but <code>go.mod</code> requires
+            <strong>Go 1.24.0</strong>. Building the image as committed fails on the Go
+            toolchain version mismatch &mdash; this is not a hypothetical edge case, it's the
+            file as it exists in the repository today. It also only compiles the Go binary; it
+            never runs <code>npm ci &amp;&amp; npm run build</code>, so even patched to a
+            current Go image, a container built from it would serve the REST/WebSocket API in
+            fallback mode without the React web UI. There is no published, maintained
+            standalone Docker image for Goalfeed. Until this is fixed upstream, building from
+            source or using a release tarball (above) is the reliable path.</p>
+        </div>
+        <p>If you want to build it anyway, bump the base image first:</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#inst-docker">Copy</button>
+          </div>
+          <pre id="inst-docker"><code>git clone https://github.com/goalfeed/goalfeed.git
+cd goalfeed
+sed -i '' 's/golang:1.21/golang:1.24/' Dockerfile   <span class="c"># or edit by hand; Linux sed drops the ''</span>
+docker build -t goalfeed .
+docker run -d --name goalfeed -p 8080:8080 \
+  -e GOALFEED_WEB=true \
+  -e GOALFEED_WATCH_NHL=WPG \
+  -e GOALFEED_HOME_ASSISTANT_URL=http://homeassistant.local:8123 \
+  -e GOALFEED_HOME_ASSISTANT_ACCESS_TOKEN=your-long-lived-token \
+  goalfeed</code></pre>
+        </div>
+        <p>Even after that patch, this image serves the API/WebSocket only &mdash; the
+          frontend build step still isn't in the <code>Dockerfile</code>. Build the frontend
+          into your own image if you need the web UI in a container.</p>
+
+        <h3><code>docker-compose.yml</code> is not "run Goalfeed in Docker"</h3>
+        <p>The <code>docker-compose.yml</code> checked into this repo spins up a local Home
+          Assistant instance for development and testing &mdash; it defines no Goalfeed
+          service at all:</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">docker-compose.yml</span>
+            <button class="copy-btn" type="button" data-copy-target="#inst-compose">Copy</button>
+          </div>
+          <pre id="inst-compose"><code>services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: goalfeed-ha
+    ports: ["8123:8123"]
+    volumes:
+      - ./dev/homeassistant/config:/config
+      - /etc/localtime:/etc/localtime:ro</code></pre>
+        </div>
+        <p>Run Goalfeed itself alongside it (from source, or the binary) and point it at
+          <code>http://localhost:8123</code>. macOS/Windows developers should have that local
+          Home Assistant point back at Goalfeed via
+          <code>http://host.docker.internal:8080</code>, per the file's own comment.</p>
+
+        <h2>Next</h2>
+        <p>Once Goalfeed is running, wire the goal event into an automation &mdash;
+          <a href="/docs/home-assistant/">Home Assistant automations</a> &mdash; or look up
+          every config key in the <a href="/docs/configuration/">configuration reference</a>.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-in">
+    <picture>
+      <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+      <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+    </picture>
+    <span class="footer-note">Self-hosted &middot; No account &middot; No tracking</span>
+    <span class="footer-links">
+      <a href="https://github.com/goalfeed/goalfeed">GitHub</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/goalfeed/goalfeed/issues">Issues</a>
+      <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
+    </span>
+    <span class="footer-meta">
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
+      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      official league data.
+    </span>
+  </div>
+</footer>
+
+<script src="/site.js" defer></script>
+</body>
+</html>

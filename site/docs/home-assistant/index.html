@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home Assistant automations — Goalfeed docs</title>
+<meta name="description" content="Wire Goalfeed's goal event into Home Assistant: the event that fires and a working goal-horn-plus-lights automation.">
+<link rel="canonical" href="https://goalfeed.ca/docs/home-assistant/">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f6fb" media="(prefers-color-scheme: light)">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Home Assistant automations — Goalfeed docs">
+<meta property="og:description" content="Wire Goalfeed's goal event into Home Assistant: the event that fires and a working goal-horn-plus-lights automation.">
+<meta property="og:url" content="https://goalfeed.ca/docs/home-assistant/">
+<meta property="og:image" content="https://goalfeed.ca/assets/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Home Assistant automations — Goalfeed docs">
+<meta name="twitter:description" content="Wire Goalfeed's goal event into Home Assistant: the event that fires and a working goal-horn-plus-lights automation.">
+<meta name="twitter:image" content="https://goalfeed.ca/assets/og-image.png">
+
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-in">
+    <a class="brand" href="/" aria-label="Goalfeed home">
+      <picture>
+        <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+        <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+      </picture>
+    </a>
+    <nav aria-label="Primary">
+      <a class="opt" href="/#install">Install</a>
+      <a href="/docs/" aria-current="page">Docs</a>
+      <a href="/docs/api/">API</a>
+      <a class="nav-cta" href="https://github.com/goalfeed/goalfeed">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap" style="padding-block: var(--sp-8)">
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Goalfeed</a>
+      <span class="sep">/</span>
+      <a href="/docs/">Docs</a>
+      <span class="sep">/</span>
+      <span aria-current="page">Home Assistant automations</span>
+    </nav>
+
+    <div class="doc-layout">
+      <nav class="doc-sidebar" aria-label="Docs">
+        <h2>Overview</h2>
+        <ul>
+          <li><a href="/docs/">Docs home</a></li>
+        </ul>
+        <h2>Tutorial</h2>
+        <ul>
+          <li><a href="/docs/getting-started/">Getting started</a></li>
+        </ul>
+        <h2>How-to</h2>
+        <ul>
+          <li><a href="/docs/install/">Install</a></li>
+          <li><a href="/docs/home-assistant/" aria-current="page">Home Assistant automations</a></li>
+          <li><a href="/docs/troubleshooting/">Troubleshooting</a></li>
+        </ul>
+        <h2>Reference</h2>
+        <ul>
+          <li><a href="/docs/configuration/">Configuration</a></li>
+          <li><a href="/docs/api/">REST API</a></li>
+          <li><a href="/docs/websocket/">WebSocket</a></li>
+          <li><a href="/docs/leagues/">Leagues</a></li>
+        </ul>
+        <h2>Explanation</h2>
+        <ul>
+          <li><a href="/docs/architecture/">Architecture</a></li>
+          <li><a href="/docs/security/">Security model</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc-content">
+        <h1>Home Assistant automations</h1>
+        <p class="lede">Wire the event Goalfeed actually fires into a goal horn and a light
+          flash &mdash; the reason most people install this.</p>
+
+        <h2>The one thing to know: it's always <code>goal</code></h2>
+        <p>Goalfeed authenticates to Home Assistant with a long-lived access token (or, on the
+          add-on, the Supervisor handles that for you) and posts every event &mdash; a real
+          goal, a touchdown, a home run, a period-start notice, and even a synthetic
+          <code>test-goals</code> event &mdash; to the same endpoint,
+          <code>POST /api/events/goal</code>. That means every automation you write triggers
+          on the Home Assistant event type <code>goal</code>, never on a sport-specific event
+          name:</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">yaml</span>
+            <button class="copy-btn" type="button" data-copy-target="#ha-trigger">Copy</button>
+          </div>
+          <pre id="ha-trigger"><code>trigger:
+  - platform: event
+    event_type: goal</code></pre>
+        </div>
+        <p>Filter on the event's <strong><code>teamCode</code></strong> field (and
+          <code>leagueId</code> if you watch the same team code across two leagues), not on
+          the payload's internal <code>type</code> field &mdash; <code>type</code> is only
+          populated for Olympic hockey events today and left empty for NHL/MLB/NFL/CFL, so a
+          filter on it will silently miss every event from the four leagues that actually fire
+          live goals (see <a href="/docs/websocket/">WebSocket reference</a> for the same gap
+          on the WebSocket feed). Goalfeed does its own team filtering server-side before it
+          ever calls Home Assistant &mdash; only teams you've configured in
+          <a href="/docs/configuration/"><code>watch.*</code></a> generate events at all &mdash;
+          but the HA event itself carries no such restriction, so your automation's
+          <code>event_data</code> condition is what keeps a multi-team install from ringing
+          every team's goal horn.</p>
+
+        <h2>Event payload</h2>
+        <p>The payload is a flattened JSON object; at minimum it carries:</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Field</th><th>Example</th></tr></thead>
+            <tbody>
+              <tr><td><code>teamCode</code></td><td><code>WPG</code></td></tr>
+              <tr><td><code>teamName</code></td><td><code>Winnipeg Jets</code></td></tr>
+              <tr><td><code>opponentCode</code> / <code>opponentName</code></td>
+                <td><code>TOR</code> / <code>Toronto Maple Leafs</code></td></tr>
+              <tr><td><code>leagueId</code> / <code>leagueName</code></td>
+                <td><code>1</code> / <code>NHL</code> &mdash; see the
+                  <a href="/docs/leagues/">leagues reference</a> for every ID</td></tr>
+              <tr><td><code>gameCode</code></td><td>opaque per-game identifier</td></tr>
+              <tr><td><code>period</code></td><td><code>2</code></td></tr>
+              <tr><td><code>gameState</code></td><td>a nested, mostly-stub
+                <code>{ home, away, status }</code> object &mdash; treat it as best-effort,
+                most fields aren't populated yet for most leagues</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout">
+          <span class="callout-tag">A 7-point NFL touchdown fires seven events</span>
+          <p>Goal/score detection is a raw score-diff for every league except Olympic hockey:
+            Goalfeed compares the last-seen score to the current score and fires one event per
+            point of increase. For NHL and MLB that's exactly right &mdash; one goal, one
+            event. For NFL and CFL, a touchdown-plus-conversion (7 points) fires
+            <strong>seven separate <code>goal</code> events</strong> in the same second, not
+            one "touchdown" event. If your automation plays a sound or flashes a light per
+            event without debouncing, a football score will trigger it seven times in a row.
+            See <a href="/docs/architecture/">Architecture</a> for why this is a design
+            consequence, not a bug to be filed.</p>
+        </div>
+
+        <h2>A complete automation: goal horn + light flash</h2>
+        <p>Real, working YAML &mdash; not simplified for the docs. This one waits a
+          configurable delay (useful if your broadcast feed runs ahead of or behind the live
+          play), plays a sound, and flashes a light, scoped to a single team via
+          <code>event_data</code>:</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">automations.yaml</span>
+            <button class="copy-btn" type="button" data-copy-target="#ha-full">Copy</button>
+          </div>
+          <pre id="ha-full"><code>automation:
+  - alias: "Goalfeed - Jets score"
+    trigger:
+      - platform: event
+        event_type: goal
+        event_data:
+          teamCode: WPG
+    action:
+      - service: media_player.play_media
+        target:
+          entity_id: media_player.living_room_speaker
+        data:
+          media_content_id: /local/sounds/goal_horn.mp3
+          media_content_type: music
+      - service: light.turn_on
+        target:
+          entity_id: light.living_room
+        data:
+          color_name: blue
+          flash: long
+      - delay: "00:00:03"
+      - service: light.turn_on
+        target:
+          entity_id: light.living_room
+        data:
+          color_name: white</code></pre>
+        </div>
+        <p>Prefer a delayed, toggle-driven version with a separate "turn it back off"
+          automation (closer to what the project wiki has historically shown, and easier to
+          re-trigger mid-flash)? Use an <code>input_number</code> for the delay and an
+          <code>input_boolean</code> as a "celebration in progress" flag:</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">configuration.yaml</span>
+            <button class="copy-btn" type="button" data-copy-target="#ha-helpers">Copy</button>
+          </div>
+          <pre id="ha-helpers"><code>input_number:
+  goalfeed:
+    name: Goalfeed Delay
+    initial: 30
+    min: 0
+    max: 180
+    step: 1
+
+input_boolean:
+  goaling:
+    name: Goal Celebration Active
+    initial: off</code></pre>
+        </div>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">automations.yaml</span>
+            <button class="copy-btn" type="button" data-copy-target="#ha-toggle">Copy</button>
+          </div>
+          <pre id="ha-toggle"><code>automation:
+  - alias: "NHL Goal Celebration"
+    trigger:
+      - platform: event
+        event_type: goal
+        event_data:
+          teamCode: WPG
+    action:
+      - delay: "00:00:{{ states.input_number.goalfeed.state | int }}"
+      - service: homeassistant.turn_on
+        entity_id: input_boolean.goaling
+      - service: media_player.play_media
+        data:
+          entity_id: media_player.your_media_player
+          media_content_id: /local/sounds/goal_horn.mp3
+          media_content_type: music
+
+  - alias: "Turn off goal"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.goaling
+        to: "on"
+        for:
+          seconds: 30
+    action:
+      - service: media_player.stop_media
+        data:
+          entity_id: media_player.your_media_player
+      - service: homeassistant.turn_off
+        entity_id: input_boolean.goaling</code></pre>
+        </div>
+        <p>Test either version without waiting for a real game: set
+          <code>test-goals: true</code> in <code>config.yaml</code> (or <code>test_goals:
+          true</code> on the add-on) and restart &mdash; a synthetic event with
+          <code>teamCode: TEST</code> fires once a minute. Scope your test automation's
+          <code>event_data</code> to <code>teamCode: TEST</code> while iterating, exactly as
+          the <a href="/docs/getting-started/">getting-started tutorial</a> does.</p>
+
+        <h2>Per-team sensors (no automation needed)</h2>
+        <p>Alongside events, Goalfeed publishes a set of Home Assistant
+          <code>sensor.*</code>/<code>binary_sensor.*</code> entities for every monitored
+          team, named <code>sensor.goalfeed_&lt;league&gt;_&lt;team&gt;_&lt;metric&gt;</code>
+          (e.g. <code>sensor.goalfeed_nhl_wpg_team_current_score</code>). Baseline values are
+          published once at startup so the entities exist even before a game starts; the set
+          includes <code>team_status</code>, <code>team_has_active_game</code>,
+          <code>team_current_score</code>, <code>team_opponent</code>, <code>team_clock</code>,
+          <code>team_period</code>, plus sport-specific ones (<code>team_shots</code> for
+          hockey, <code>team_down</code>/<code>team_distance</code> for football,
+          <code>team_balls</code>/<code>team_strikes</code>/<code>team_outs</code> for
+          baseball). Build a dashboard card from these without listening for the event at all.</p>
+
+        <h2>Confirming the connection</h2>
+        <p>Check whether Goalfeed can currently reach Home Assistant, and which source it's
+          using (Supervisor vs. your own <code>config.yaml</code>):</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#ha-status">Copy</button>
+          </div>
+          <pre id="ha-status"><code>curl -s http://localhost:8080/api/homeassistant/status</code></pre>
+        </div>
+        <p>Full field list: <a href="/docs/api/">API reference</a>.</p>
+
+        <h2>Next</h2>
+        <p>Nothing firing? &mdash; <a href="/docs/troubleshooting/">Troubleshooting</a> has the
+          exact error text for the common failure modes, including a rejected Home Assistant
+          URL (see <a href="/docs/security/">Security</a> for why that check exists).</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-in">
+    <picture>
+      <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+      <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+    </picture>
+    <span class="footer-note">Self-hosted &middot; No account &middot; No tracking</span>
+    <span class="footer-links">
+      <a href="https://github.com/goalfeed/goalfeed">GitHub</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/goalfeed/goalfeed/issues">Issues</a>
+      <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
+    </span>
+    <span class="footer-meta">
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
+      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      official league data.
+    </span>
+  </div>
+</footer>
+
+<script src="/site.js" defer></script>
+</body>
+</html>

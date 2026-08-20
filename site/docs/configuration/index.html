@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configuration reference — Goalfeed docs</title>
+<meta name="description" content="Every Goalfeed config key, environment variable, and CLI flag: type, default, description, and a worked example.">
+<link rel="canonical" href="https://goalfeed.ca/docs/configuration/">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f6fb" media="(prefers-color-scheme: light)">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+
+<link rel="icon" href="/assets/favicon.ico" sizes="any">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Configuration reference — Goalfeed docs">
+<meta property="og:description" content="Every Goalfeed config key, environment variable, and CLI flag: type, default, description, and a worked example.">
+<meta property="og:url" content="https://goalfeed.ca/docs/configuration/">
+<meta property="og:image" content="https://goalfeed.ca/assets/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Configuration reference — Goalfeed docs">
+<meta name="twitter:description" content="Every Goalfeed config key, environment variable, and CLI flag: type, default, description, and a worked example.">
+<meta name="twitter:image" content="https://goalfeed.ca/assets/og-image.png">
+
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-in">
+    <a class="brand" href="/" aria-label="Goalfeed home">
+      <picture>
+        <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+        <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+      </picture>
+    </a>
+    <nav aria-label="Primary">
+      <a class="opt" href="/#install">Install</a>
+      <a href="/docs/" aria-current="page">Docs</a>
+      <a href="/docs/api/">API</a>
+      <a class="nav-cta" href="https://github.com/goalfeed/goalfeed">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap" style="padding-block: var(--sp-8)">
+
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Goalfeed</a>
+      <span class="sep">/</span>
+      <a href="/docs/">Docs</a>
+      <span class="sep">/</span>
+      <span aria-current="page">Configuration</span>
+    </nav>
+
+    <div class="doc-layout">
+      <nav class="doc-sidebar" aria-label="Docs">
+        <h2>Overview</h2>
+        <ul>
+          <li><a href="/docs/">Docs home</a></li>
+        </ul>
+        <h2>Tutorial</h2>
+        <ul>
+          <li><a href="/docs/getting-started/">Getting started</a></li>
+        </ul>
+        <h2>How-to</h2>
+        <ul>
+          <li><a href="/docs/install/">Install</a></li>
+          <li><a href="/docs/home-assistant/">Home Assistant automations</a></li>
+          <li><a href="/docs/troubleshooting/">Troubleshooting</a></li>
+        </ul>
+        <h2>Reference</h2>
+        <ul>
+          <li><a href="/docs/configuration/" aria-current="page">Configuration</a></li>
+          <li><a href="/docs/api/">REST API</a></li>
+          <li><a href="/docs/websocket/">WebSocket</a></li>
+          <li><a href="/docs/leagues/">Leagues</a></li>
+        </ul>
+        <h2>Explanation</h2>
+        <ul>
+          <li><a href="/docs/architecture/">Architecture</a></li>
+          <li><a href="/docs/security/">Security model</a></li>
+        </ul>
+      </nav>
+
+      <div class="doc-content">
+        <h1>Configuration reference</h1>
+        <p class="lede">Every CLI flag, YAML key, and <code>GOALFEED_*</code> environment
+          variable Goalfeed reads, with type, default, and a worked example.</p>
+
+        <h2>Minimal working <code>config.yaml</code></h2>
+        <p>Copy this, edit the URL/token and team codes, and you have a working install:</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">config.yaml</span>
+            <button class="copy-btn" type="button" data-copy-target="#cfg-minimal">Copy</button>
+          </div>
+          <pre id="cfg-minimal"><code>home_assistant:
+  url: "http://homeassistant.local:8123"
+  access_token: "your-long-lived-access-token"
+
+watch:
+  nhl:
+    - WPG
+  mlb:
+    - TOR
+  cfl:
+    - BC
+    - OTT</code></pre>
+        </div>
+        <p>Goalfeed looks for this file as <code>./config.yaml</code> in its working
+          directory, reads it once at startup with Viper, and layers environment variables and
+          CLI flags on top. Precedence, lowest to highest:</p>
+        <p style="font-family: var(--font-mono); font-size: var(--fs-small)">
+          config file &nbsp;&rarr;&nbsp; <code>GOALFEED_*</code> env var &nbsp;&rarr;&nbsp;
+          CLI flag</p>
+
+        <h2>Complete option table</h2>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>CLI flag</th><th>YAML key</th><th>Env var</th><th>Type</th>
+                <th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>--nhl</code></td><td><code>watch.nhl</code></td>
+                <td><code>GOALFEED_WATCH_NHL</code></td><td>string list</td><td><code>[]</code></td>
+                <td>NHL team codes to watch, e.g. <code>WPG</code>, or <code>*</code> for
+                  every team</td></tr>
+              <tr><td><code>--mlb</code></td><td><code>watch.mlb</code></td>
+                <td><code>GOALFEED_WATCH_MLB</code></td><td>string list</td><td><code>[]</code></td>
+                <td>MLB team codes to watch</td></tr>
+              <tr><td><code>--cfl</code></td><td><code>watch.cfl</code></td>
+                <td><code>GOALFEED_WATCH_CFL</code></td><td>string list</td><td><code>[]</code></td>
+                <td>CFL team codes to watch</td></tr>
+              <tr><td>&mdash;</td><td><code>watch.nfl</code></td>
+                <td><code>GOALFEED_WATCH_NFL</code></td><td>string list</td><td><code>[]</code></td>
+                <td>NFL team codes to watch &mdash; <strong>no CLI flag exists</strong>, YAML or
+                  env only</td></tr>
+              <tr><td>&mdash;</td><td><code>watch.olympic_men</code></td>
+                <td><code>GOALFEED_WATCH_OLYMPIC_MEN</code></td><td>string list</td>
+                <td><code>[]</code></td>
+                <td>Olympic Men's Hockey team codes &mdash; no CLI flag; see the
+                  <a href="/docs/leagues/">leagues reference</a> for this league's WIP
+                  status</td></tr>
+              <tr><td>&mdash;</td><td><code>watch.olympic_women</code></td>
+                <td><code>GOALFEED_WATCH_OLYMPIC_WOMEN</code></td><td>string list</td>
+                <td><code>[]</code></td>
+                <td>Olympic Women's Hockey team codes &mdash; no CLI flag; same WIP status</td></tr>
+              <tr><td>&mdash;</td><td><code>watch.iihf</code></td>
+                <td><code>GOALFEED_WATCH_IIHF</code></td><td>string list</td><td><code>[]</code></td>
+                <td>IIHF team codes &mdash; only affects the on-demand
+                  <code>/api</code> endpoints, <strong>not</strong> the live-polling goal
+                  loop (see <a href="/docs/leagues/">leagues reference</a>)</td></tr>
+              <tr><td>&mdash;</td><td><code>home_assistant.url</code></td>
+                <td><code>GOALFEED_HOME_ASSISTANT_URL</code></td><td>string</td>
+                <td><code>""</code></td>
+                <td>Home Assistant base URL. Ignored and auto-detected when running as the HA
+                  Supervisor add-on</td></tr>
+              <tr><td>&mdash;</td><td><code>home_assistant.access_token</code></td>
+                <td><code>GOALFEED_HOME_ASSISTANT_ACCESS_TOKEN</code></td><td>string</td>
+                <td><code>""</code></td>
+                <td>Home Assistant long-lived access token. Also ignored under the
+                  Supervisor</td></tr>
+              <tr><td>&mdash;</td><td><code>home_assistant.allow_remote_url</code></td>
+                <td><code>GOALFEED_HOME_ASSISTANT_ALLOW_REMOTE_URL</code></td><td>bool</td>
+                <td><code>false</code></td>
+                <td>Allow <code>home_assistant.url</code> to be a public/remote address.
+                  Default rejects anything that isn't loopback/private/link-local-adjacent or
+                  a clearly local hostname &mdash; see <a href="/docs/security/">Security</a></td></tr>
+              <tr><td>&mdash;</td><td><code>web.allow_config_writes</code></td>
+                <td><code>GOALFEED_WEB_ALLOW_CONFIG_WRITES</code></td><td>bool</td>
+                <td><code>false</code></td>
+                <td>Let <code>POST /api/homeassistant/config</code> persist changes to
+                  <code>config.yaml</code> on disk. By default it only updates the running
+                  process's in-memory config for the current session</td></tr>
+              <tr><td><code>--test-goals</code></td><td><code>test-goals</code></td>
+                <td><em>hyphenated key, see note below</em></td><td>bool</td>
+                <td><code>false</code></td>
+                <td>Fire a synthetic <code>TEST</code> goal event once a minute, through the
+                  same code path as a real goal &mdash; see the
+                  <a href="/docs/getting-started/">getting-started tutorial</a></td></tr>
+              <tr><td><code>--web</code></td><td><code>web</code></td>
+                <td><em>hyphenated key</em></td><td>bool</td><td><code>false</code></td>
+                <td>Start the REST/WebSocket/web UI server alongside the polling loop. Without
+                  it, Goalfeed runs headless</td></tr>
+              <tr><td><code>--web-port</code></td><td><code>web-port</code></td>
+                <td><em>hyphenated key</em></td><td>string</td><td><code>"8080"</code></td>
+                <td>Port for the web server</td></tr>
+              <tr><td>&mdash;</td><td><code>app_log.path</code></td>
+                <td><code>GOALFEED_APP_LOG_PATH</code></td><td>string</td>
+                <td><code>"app.log.jsonl"</code></td>
+                <td>Path to the JSONL application log behind <code>/api/logs</code> and
+                  <code>/api/events</code>; parent directory is created if missing</td></tr>
+              <tr><td>&mdash;</td><td><code>nfl.fastcast.enabled</code></td>
+                <td><code>GOALFEED_NFL_FASTCAST_ENABLED</code></td><td>bool</td>
+                <td><code>true</code></td>
+                <td>Use ESPN's Fastcast WebSocket for near-real-time NFL updates alongside
+                  polling</td></tr>
+              <tr><td>&mdash;</td><td><code>nfl.fastcast.ping_interval_sec</code></td>
+                <td><code>GOALFEED_NFL_FASTCAST_PING_INTERVAL_SEC</code></td><td>int (seconds)</td>
+                <td><code>20</code></td><td>Fastcast keepalive ping interval</td></tr>
+              <tr><td>&mdash;</td><td><code>nfl.fastcast.pong_wait_sec</code></td>
+                <td><code>GOALFEED_NFL_FASTCAST_PONG_WAIT_SEC</code></td><td>int (seconds)</td>
+                <td><code>60</code></td><td>Fastcast pong timeout</td></tr>
+              <tr><td>&mdash;</td><td><code>nfl.fastcast.reconnect_base_ms</code></td>
+                <td><code>GOALFEED_NFL_FASTCAST_RECONNECT_BASE_MS</code></td><td>int (ms)</td>
+                <td><code>2000</code></td><td>Fastcast reconnect backoff base</td></tr>
+              <tr><td>&mdash;</td><td><code>nfl.fastcast.reconnect_max_ms</code></td>
+                <td><code>GOALFEED_NFL_FASTCAST_RECONNECT_MAX_MS</code></td><td>int (ms)</td>
+                <td><code>30000</code></td><td>Fastcast reconnect backoff ceiling</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Notes that bite people</h2>
+        <ul>
+          <li><strong>There is no <code>--config</code> flag.</strong> Goalfeed always looks
+            for <code>./config.yaml</code> (or <code>.yml</code>) in the current working
+            directory. If it's missing, the read fails silently and every key falls back to
+            its zero value &mdash; see <a href="/docs/troubleshooting/">Troubleshooting</a>.</li>
+          <li><strong>CLI flags exist only for <code>--nhl</code>/<code>--mlb</code>/<code>--cfl</code>.</strong>
+            NFL, IIHF, and Olympic Men's/Women's Hockey team lists are config-file or
+            environment-variable only &mdash; there's no flag for them, and none is planned to
+            appear here without one being added to <code>main.go</code>.</li>
+          <li><strong>Precedence is config file &rarr; environment variable &rarr; CLI
+            flag</strong> &mdash; a flag always wins over an env var, which always wins over
+            the YAML file.</li>
+          <li><strong><code>test-goals</code>, <code>web</code>, and <code>web-port</code> use
+            hyphenated Viper keys</strong>, which most shells reject in
+            <code>export NAME=value</code>. Set them via CLI flag, YAML, or
+            <code>env 'GOALFEED_WEB=true' goalfeed</code> instead of a plain
+            <code>export</code>.</li>
+          <li><strong><code>watch.*</code> accepts <code>"*"</code></strong> as a wildcard
+            meaning "every team in this league" &mdash; useful for testing, noisy for daily
+            use.</li>
+          <li><strong>The Home Assistant Supervisor add-on ignores <code>home_assistant.url</code>
+            and <code>home_assistant.access_token</code> entirely</strong> when
+            <code>SUPERVISOR_API</code>/<code>SUPERVISOR_TOKEN</code> are present in the
+            environment &mdash; which they always are under the add-on. Setting those keys
+            has no effect there.</li>
+        </ul>
+
+        <h2>Worked examples</h2>
+        <h3>Watch every NHL team, with test events on, in web mode</h3>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">config.yaml</span>
+            <button class="copy-btn" type="button" data-copy-target="#cfg-ex1">Copy</button>
+          </div>
+          <pre id="cfg-ex1"><code>watch:
+  nhl:
+    - "*"
+test-goals: true
+web: true
+web-port: "8080"</code></pre>
+        </div>
+        <h3>NFL, no CLI flag &mdash; YAML only</h3>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">config.yaml</span>
+            <button class="copy-btn" type="button" data-copy-target="#cfg-ex2">Copy</button>
+          </div>
+          <pre id="cfg-ex2"><code>watch:
+  nfl:
+    - CLE
+    - GB</code></pre>
+        </div>
+        <h3>Same NFL example as environment variables</h3>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#cfg-ex3">Copy</button>
+          </div>
+          <pre id="cfg-ex3"><code>export GOALFEED_WATCH_NFL=CLE,GB
+export GOALFEED_HOME_ASSISTANT_URL=http://homeassistant.local:8123
+export GOALFEED_HOME_ASSISTANT_ACCESS_TOKEN=your-long-lived-token
+./goalfeed --web</code></pre>
+        </div>
+        <h3>A remote Home Assistant instance, explicitly allowed</h3>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">config.yaml</span>
+            <button class="copy-btn" type="button" data-copy-target="#cfg-ex4">Copy</button>
+          </div>
+          <pre id="cfg-ex4"><code>home_assistant:
+  url: "https://myhome.duckdns.org:8123"
+  access_token: "your-long-lived-access-token"
+  allow_remote_url: true   <span class="c"># required — see Security</span></code></pre>
+        </div>
+        <p>Without <code>allow_remote_url: true</code> here, Goalfeed refuses to send events
+          to this URL at all &mdash; see <a href="/docs/security/">Security</a> for why, and
+          <a href="/docs/troubleshooting/">Troubleshooting</a> for the exact error text.</p>
+
+        <h2>Next</h2>
+        <p>Turn these into a running instance &mdash; <a href="/docs/install/">Install</a>
+          &mdash; or wire the resulting events into Home Assistant &mdash;
+          <a href="/docs/home-assistant/">Home Assistant automations</a>.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-in">
+    <picture>
+      <source srcset="/assets/wordmark-light.svg" media="(prefers-color-scheme: light)">
+      <img src="/assets/wordmark-dark.svg" alt="Goalfeed" width="1027" height="260">
+    </picture>
+    <span class="footer-note">Self-hosted &middot; No account &middot; No tracking</span>
+    <span class="footer-links">
+      <a href="https://github.com/goalfeed/goalfeed">GitHub</a>
+      <a href="/docs/">Docs</a>
+      <a href="https://github.com/goalfeed/goalfeed/issues">Issues</a>
+      <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
+    </span>
+    <span class="footer-meta">
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
+      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      official league data.
+    </span>
+  </div>
+</footer>
+
+<script src="/site.js" defer></script>
+</body>
+</html>
