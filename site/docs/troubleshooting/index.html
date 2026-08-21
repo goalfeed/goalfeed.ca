@@ -175,6 +175,39 @@ tail -n 5 app.log.jsonl</code></pre>
           (bundles the frontend), or run <code>make build</code> / <code>make frontend</code>
           from a source checkout with Node 20+ installed.</p>
 
+        <h2>Startup logs "Frontend build failed: package.json not found... Install Node.js" even though the web UI works fine</h2>
+        <p><strong>Where you'll see it:</strong> on a release tarball, in <code>--web</code>
+          mode, on startup (real, captured output against a v1.0.39 archive):</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">console</span>
+            <button class="copy-btn" type="button" data-copy-target="#ts-frontend-log">Copy</button>
+          </div>
+          <pre id="ts-frontend-log"><code>2026/08/21 08:24:19 Frontend build failed: package.json not found in ./web/frontend
+2026/08/21 08:24:19 Serving API-only mode. Install Node.js and npm to enable the web interface.</code></pre>
+        </div>
+        <p>&mdash; while <code>http://&lt;host&gt;:8080/</code> in that same run serves the
+          actual React scoreboard, not the JSON status blob further up this page. The two
+          things contradict each other: the log says the frontend failed and to install
+          Node.js; the browser shows the frontend working.</p>
+        <p><strong>Cause:</strong> a real bug in v1.0.39 and earlier. Startup always tried to
+          <em>build</em> the frontend from <code>web/frontend/package.json</code>, which a
+          release archive never ships (it ships the already-built <code>web/frontend/build</code>
+          directory instead, not the source tree) &mdash; so that step always failed and always
+          logged the Node.js message, on every release-binary startup, regardless of whether the
+          UI was actually about to work. Static file serving is a separate code path that checks
+          for <code>web/frontend/build</code> directly, found it, and served it correctly
+          anyway &mdash; which is why the UI loads even though the log line says it shouldn't.
+          <strong>Ignore this message on a release binary</strong> if the web UI actually loads
+          in your browser; it's log noise, not a real failure.</p>
+        <p><strong>Next step:</strong> this is fixed as of the release after v1.0.39 &mdash; the
+          startup check now looks for the prebuilt <code>web/frontend/build/index.html</code>
+          first and skips the Node.js-only build step entirely when it's already there, so the
+          message no longer prints on a release binary. If you're still on v1.0.39 or earlier
+          and want the log to stop lying to you, upgrade (see
+          <a href="/docs/install/#upgrade-uninstall">Upgrade and uninstall</a>); there is nothing
+          to fix on your end, and installing Node.js changes nothing for a release binary.</p>
+
         <h2>"I set <code>--nfl WPG</code> and got a flag error"</h2>
         <p><strong>Cause:</strong> <code>--nfl</code> isn't a real flag. The only registered
           CLI flags are <code>--nhl</code>, <code>--mlb</code>, and <code>--cfl</code>. The NFL
@@ -189,8 +222,25 @@ tail -n 5 app.log.jsonl</code></pre>
           <em>current working directory only</em> &mdash; there is no <code>--config</code>
           flag to point it elsewhere. If it isn't found, the config read fails silently (the
           error is discarded internally) and every key falls back to its zero value: no
-          watched teams, no Home Assistant URL, headless mode. Nothing crashes; you just get
-          an idle process.</p>
+          watched teams, no Home Assistant URL, headless mode.</p>
+        <p><strong>As of the release after v1.0.39, this prints one line and tells you
+          so.</strong> If no <code>config.yaml</code> was found <em>and</em> no team was set by
+          any other means (flag or <code>GOALFEED_*</code> env var), startup now writes a
+          single actionable line to stderr before anything else logs, naming the working
+          directory it looked in and what to do next:</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">console</span>
+            <button class="copy-btn" type="button" data-copy-target="#ts-noconfig">Copy</button>
+          </div>
+          <pre id="ts-noconfig"><code>No config.yaml found in /home/pi/goalfeed, and no teams set via flags or GOALFEED_* env vars,
+so Goalfeed has nothing to watch. Create a config.yaml next to the binary (see
+config.example.yaml in the release archive), or pass --nhl WPG to try it right now.
+Full reference: https://goalfeed.ca/docs/configuration/</code></pre>
+        </div>
+        <p>On v1.0.39 and earlier this notice doesn't exist yet, so a missing
+          <code>config.yaml</code> there really does look like an idle process with nothing in
+          the log to explain why &mdash; that's the case the rest of this entry is for.</p>
         <p><strong>Next step:</strong> confirm you're launching Goalfeed from the same
           directory as <code>config.yaml</code> (systemd/Supervisor users: check the
           service's <code>WorkingDirectory</code>). If in doubt, set at least one option via

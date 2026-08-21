@@ -167,8 +167,11 @@ test_goals: false</code></pre>
           web UI (GoReleaser's build hook runs <code>npm ci &amp;&amp; npm run build</code>
           before packaging), so this is the one channel where the frontend build question
           never comes up.</p>
-        <p>Exact platforms shipped for the latest tag, <code>v1.0.36</code> (verified against
-          the release's actual asset list, not just the build config):</p>
+        <p>Exact platforms shipped, verified against a release's actual asset list rather
+          than just the build config (checked against <code>v1.0.39</code>; the matrix itself
+          hasn't changed across recent releases, but check
+          <a href="https://github.com/goalfeed/goalfeed/releases/latest">the current release</a>
+          if in doubt):</p>
         <div class="table-scroll">
           <table>
             <thead><tr><th>OS</th><th>Architectures</th></tr></thead>
@@ -198,6 +201,26 @@ tar xzf goalfeed_*_linux_amd64.tar.gz
           Each one contains the <code>goalfeed</code> (or <code>goalfeed.exe</code>) binary,
           <code>README.md</code>, and the prebuilt <code>web/frontend/build/</code> directory
           &mdash; keep that directory alongside the binary so the web UI serves.</p>
+
+        <h3 id="gatekeeper">macOS: "cannot be opened because the developer cannot be verified"</h3>
+        <p>The released binaries are <strong>unsigned and not notarized</strong> &mdash;
+          <code>spctl --assess --type execute ./goalfeed</code> reports <code>rejected</code>
+          (<code>TeamIdentifier=not set</code>), checked against a downloaded archive, not
+          assumed. A <code>curl</code>/<code>gh</code> download in a terminal isn't
+          quarantined, so running the binary right after extracting it works fine. A
+          <strong>browser</strong> download is quarantined, though &mdash; and clicking the
+          archive in a browser is the more common way people actually get this file &mdash; so
+          that copy shows "<code>goalfeed</code> cannot be opened because the developer cannot
+          be verified" the first time you try to run it. Nothing is wrong with the binary;
+          nobody has paid Apple to notarize it. Clear the quarantine flag and it runs
+          normally:</p>
+        <div class="code-block">
+          <div class="code-block-head">
+            <span class="code-block-lang">bash</span>
+            <button class="copy-btn" type="button" data-copy-target="#inst-xattr">Copy</button>
+          </div>
+          <pre id="inst-xattr"><code>xattr -d com.apple.quarantine ./goalfeed</code></pre>
+        </div>
 
         <h2 id="source">From source</h2>
         <p>Requires <strong>Go 1.24+</strong> and <strong>Node 20+</strong> (for the web UI).</p>
@@ -238,7 +261,7 @@ make build   <span class="c"># npm ci && npm run build (frontend), then go build
           </div>
           <pre id="inst-docker"><code>git clone https://github.com/goalfeed/goalfeed.git
 cd goalfeed
-sed -i '' 's/golang:1.21/golang:1.24/' Dockerfile   <span class="c"># or edit by hand; Linux sed drops the ''</span>
+perl -pi -e 's/golang:1\.21/golang:1.24/' Dockerfile   <span class="c"># portable; or edit by hand</span>
 docker build -t goalfeed .
 docker run -d --name goalfeed -p 8080:8080 \
   -e GOALFEED_WEB=true \
@@ -247,6 +270,15 @@ docker run -d --name goalfeed -p 8080:8080 \
   -e GOALFEED_HOME_ASSISTANT_ACCESS_TOKEN=your-long-lived-token \
   goalfeed</code></pre>
         </div>
+        <p><code>your-long-lived-token</code> is the Home Assistant long-lived access token
+          from <strong>your profile &rarr; Security &rarr; Long-Lived Access Tokens</strong>
+          &mdash; see the <a href="/docs/configuration/">configuration reference</a> for every
+          other key. <code>perl -pi -e</code> edits the file in place identically on macOS and
+          Linux; <code>sed -i</code> does not &mdash; BSD/macOS <code>sed</code> requires an
+          empty extension argument (<code>sed -i '' 's/.../.../ '</code>) that GNU
+          <code>sed</code> (most Linux distros, where Docker actually runs) rejects, so a
+          <code>sed -i</code> command copy-pasted from one platform routinely fails on the
+          other.</p>
         <p>Even after that patch, this image serves the API/WebSocket only &mdash; the
           frontend build step still isn't in the <code>Dockerfile</code>. Build the frontend
           into your own image if you need the web UI in a container.</p>
@@ -273,6 +305,29 @@ docker run -d --name goalfeed -p 8080:8080 \
           <code>http://localhost:8123</code>. macOS/Windows developers should have that local
           Home Assistant point back at Goalfeed via
           <code>http://host.docker.internal:8080</code>, per the file's own comment.</p>
+
+        <h2 id="upgrade-uninstall">Upgrade and uninstall</h2>
+        <p><strong>Upgrade &mdash; tested, not assumed.</strong> Going from v1.0.36 to v1.0.39
+          by downloading the new release and overwriting the old binary in place (same
+          directory, same filename) works cleanly: <code>config.yaml</code> is left untouched,
+          and <code>./goalfeed --version</code> reports the new version afterward. There's no
+          migration step and no separate uninstall/reinstall dance &mdash; download the new
+          archive, extract it over the old one (or into the same directory), and restart the
+          process.</p>
+        <p><strong>Uninstall.</strong> A binary install (release archive, or <code>make
+          build</code> from source) creates exactly four things, all inside the one directory
+          you ran it from, and nothing outside it &mdash; no launchd/systemd unit, no shell
+          profile edits, no cache elsewhere on the machine:</p>
+        <ul>
+          <li>the <code>goalfeed</code> (or <code>goalfeed.exe</code>) binary itself</li>
+          <li>the bundled <code>web/</code> directory (the web UI's static files)</li>
+          <li><code>config.yaml</code>, if you created one</li>
+          <li><code>app.log.jsonl</code>, written at runtime once Goalfeed logs its first
+            event</li>
+        </ul>
+        <p>To uninstall, delete that directory. Running the Home Assistant add-on instead?
+          Uninstall it from <strong>Settings &rarr; Add-ons &rarr; Goalfeed &rarr;
+          Uninstall</strong>, the same way you'd remove any other add-on.</p>
 
         <h2>Next</h2>
         <p>Once Goalfeed is running, wire the goal event into an automation &mdash;

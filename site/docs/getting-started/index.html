@@ -119,12 +119,12 @@
           </div>
           <pre id="gs-download"><code><span class="c"># swap linux_amd64 for darwin_arm64, windows_amd64, etc. &mdash; see Install for the full list</span>
 gh release download --repo goalfeed/goalfeed --pattern "*linux_amd64.tar.gz"
-tar xzf goalfeed_*_linux_amd64.tar.gz
-cd goalfeed_*_linux_amd64 2>/dev/null || true</code></pre>
+tar xzf goalfeed_*_linux_amd64.tar.gz</code></pre>
         </div>
-        <p><strong>Expected result:</strong> a <code>goalfeed</code> binary (plus a
-          <code>web/frontend/build</code> directory bundled in the archive) in your current
-          directory.</p>
+        <p><strong>Expected result:</strong> the archive extracts flat, not into its own
+          subdirectory &mdash; so a <code>goalfeed</code> binary (plus a
+          <code>web/frontend/build</code> directory bundled in the archive) lands directly in
+          your current directory. There's no directory to <code>cd</code> into.</p>
 
         <h2>2. Write a minimal <code>config.yaml</code> (about 1 minute)</h2>
         <p>In the same directory as the binary, create <code>config.yaml</code>:</p>
