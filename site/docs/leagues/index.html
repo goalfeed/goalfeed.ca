@@ -93,9 +93,8 @@
 
       <div class="doc-content">
         <h1>Leagues reference</h1>
-        <p class="lede">Every league Goalfeed has code for, its upstream data source, and an
-          honest tier &mdash; not every league that has a client is one you can actually get a
-          Home Assistant event from today.</p>
+        <p class="lede">Every league wired into Goalfeed's live polling loop today, its
+          upstream data source, and an honest support tier.</p>
 
         <h2>Minimal working example</h2>
         <p>List the teams Goalfeed knows about for a league (useful for building
@@ -108,34 +107,18 @@
           <pre id="lg-minimal"><code>curl -s "http://localhost:8080/api/teams?leagueId=1" | python3 -m json.tool</code></pre>
         </div>
 
-        <h2>Three tiers, stated plainly</h2>
+        <h2>Supported today</h2>
         <div class="table-scroll">
           <table>
             <thead><tr><th>Tier</th><th>Meaning</th><th>Leagues</th></tr></thead>
             <tbody>
               <tr>
                 <td><span class="badge badge--live">Live</span></td>
-                <td>Registered in the 1-second/1-minute polling loop. A score change fires a
+                <td>Registered in the 1-second polling loop. A score change fires a
                   real Home Assistant <code>goal</code> event and a WebSocket
-                  <code>event</code> message.</td>
-                <td>NHL, MLB, CFL, NFL</td>
-              </tr>
-              <tr>
-                <td><span class="badge">API only</span></td>
-                <td>A full client and service exist and answer
-                  <code>/api/games/history</code>, <code>/api/upcoming</code>, and
-                  <code>/api/teams</code>, but the league is never registered in
-                  <code>main.go</code>'s live polling loop. No goal event will ever fire for
-                  it.</td>
-                <td>IIHF</td>
-              </tr>
-              <tr>
-                <td><span class="badge badge--wip">Untracked WIP</span></td>
-                <td>Code exists, compiles, and is wired into both <code>main.go</code> and the
-                  web API locally &mdash; but the source files are not committed to git, so
-                  they are not part of any tagged release or the public repository as
-                  published. Not something you can install today.</td>
-                <td>Olympic Men's Hockey, Olympic Women's Hockey</td>
+                  <code>event</code> message. A goal is always one point, so one score
+                  change is one event.</td>
+                <td>NHL, MLB</td>
               </tr>
             </tbody>
           </table>
@@ -159,48 +142,27 @@
                 <td>Score change &rarr; one event per run</td>
                 <td><span class="badge badge--live">Live</span></td>
               </tr>
-              <tr>
-                <td>CFL</td><td><code>5</code></td>
-                <td><code>cflscoreboard.cfl.ca</code>, plus a third-party sports-betting
-                  live-tracker widget feed (<code>betstream.betgenius.com</code>) for play
-                  detail &mdash; not a CFL-operated API</td>
-                <td>Score change &rarr; one event per point &mdash; a converted touchdown (7
-                  points) fires <strong>seven</strong> events, not one</td>
-                <td><span class="badge badge--live">Live</span></td>
-              </tr>
-              <tr>
-                <td>NFL</td><td><code>6</code></td>
-                <td>ESPN's public <code>site.api.espn.com</code> site API, plus ESPN's
-                  "Fastcast" WebSocket for lower-latency in-game push updates</td>
-                <td>Same raw score-diff as CFL &mdash; a touchdown-plus-conversion fires seven
-                  events</td>
-                <td><span class="badge badge--live">Live</span></td>
-              </tr>
-              <tr>
-                <td>IIHF</td><td><code>4</code></td>
-                <td><code>realtime.iihf.com</code></td>
-                <td>Nothing &mdash; not polled by the background tickers at all</td>
-                <td><span class="badge">API only</span></td>
-              </tr>
-              <tr>
-                <td>Olympic Men's Hockey</td><td><code>7</code></td>
-                <td><code>olympics.com</code>'s internal WMR API, hard-coded to the 2026 Winter
-                  Games endpoint (<code>wmr-owg2026</code>) &mdash; will need a code change for
-                  future Games, not a generic/configurable integration</td>
-                <td>Score change &rarr; one event per goal. This is also the <em>only</em>
-                  league service that populates <code>Event.Type</code> and
-                  <code>Event.Description</code> &mdash; see the
-                  <a href="/docs/websocket/">WebSocket reference</a></td>
-                <td><span class="badge badge--wip">Untracked WIP</span></td>
-              </tr>
-              <tr>
-                <td>Olympic Women's Hockey</td><td><code>8</code></td>
-                <td>Same as above</td>
-                <td>Same as above</td>
-                <td><span class="badge badge--wip">Untracked WIP</span></td>
-              </tr>
             </tbody>
           </table>
+        </div>
+
+        <div class="callout">
+          <span class="callout-tag">CFL and NFL: not listed, pending verification</span>
+          <p>Both leagues have a client and service in this repo (IDs <code>5</code> and
+            <code>6</code>) &mdash; CFL polls <code>cflscoreboard.cfl.ca</code> plus a
+            third-party sports-betting live-tracker feed
+            (<code>betstream.betgenius.com</code>) for play detail; NFL polls ESPN's
+            <code>site.api.espn.com</code> site API plus its "Fastcast" WebSocket for
+            lower-latency push updates. Neither is listed above as supported. Live
+            testing on 2026-08-20 found both leagues' score tracking broken &mdash; the
+            CFL client discards a valid payload on a <code>sportId</code>/
+            <code>competitionId</code> type mismatch (BetGenius sends strings, the
+            struct expects <code>int</code>), and the NFL client parses
+            <code>/summary?event=</code> expecting a top-level <code>events[]</code>
+            array that response doesn't have. With the score pinned or frozen, the
+            score-diff detector never sees a change, so no <code>goal</code> event
+            fires for either league today. Fixes are in progress; a league is listed
+            again only once it's been verified working against a live game.</p>
         </div>
 
         <div class="callout">
@@ -243,8 +205,7 @@
       <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
     </span>
     <span class="footer-meta">
-      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
-      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, or any team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
       official league data.
     </span>
   </div>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Goalfeed — the goal horn for your house</title>
-<meta name="description" content="Goalfeed watches live NHL, MLB, CFL and NFL games and fires a real-time event within a second of your team scoring &mdash; wire it into Home Assistant and let the goal horn, the lights, and the sirens do the rest. Self-hosted, free, open source.">
+<meta name="description" content="Goalfeed watches live NHL and MLB games and fires a real-time event within a second of your team scoring &mdash; wire it into Home Assistant and let the goal horn, the lights, and the sirens do the rest. Self-hosted, free, open source.">
 <link rel="canonical" href="https://goalfeed.ca/">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#070b14" media="(prefers-color-scheme: dark)">
@@ -20,14 +20,14 @@
 
 <meta property="og:type" content="website">
 <meta property="og:title" content="Goalfeed — the goal horn for your house">
-<meta property="og:description" content="Real-time goal events for NHL, MLB, CFL and NFL, fired straight into Home Assistant. Self-hosted, free, open source.">
+<meta property="og:description" content="Real-time goal events for NHL and MLB, fired straight into Home Assistant. Self-hosted, free, open source.">
 <meta property="og:url" content="https://goalfeed.ca/">
 <meta property="og:image" content="https://goalfeed.ca/assets/og-image.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="640">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Goalfeed — the goal horn for your house">
-<meta name="twitter:description" content="Real-time goal events for NHL, MLB, CFL and NFL, fired straight into Home Assistant.">
+<meta name="twitter:description" content="Real-time goal events for NHL and MLB, fired straight into Home Assistant.">
 <meta name="twitter:image" content="https://goalfeed.ca/assets/og-image.png">
 
 <link rel="stylesheet" href="/styles.css">
@@ -62,7 +62,7 @@
         <p class="eyebrow">Self-hosted · Open source</p>
         <h1>Your team scores.<br>Your house reacts.</h1>
         <p class="lede">
-          Goalfeed watches live NHL, MLB, CFL and NFL games for the teams you tell it to
+          Goalfeed watches live NHL and MLB games for the teams you tell it to
           follow, and fires a Home Assistant event within a second of the score changing upstream &mdash;
           goal horn, lights, sirens, whatever you wire to it. It polls the same public
           league data your browser already uses and talks straight to your own Home
@@ -166,9 +166,8 @@
             <p>Detection is a raw score-diff, not a play-by-play feed — Goalfeed knows a
               team's score went up, not who scored or how. So there's no scorer name here.
               The full event also carries an internal <code>type</code> field, but it's
-              only populated for Olympic hockey today; NHL, MLB, CFL and NFL leave it
-              empty. Filter your automations on <code>teamCode</code> and
-              <code>leagueId</code>, not on <code>type</code>.</p>
+              empty for every league right now. Filter your automations on
+              <code>teamCode</code> and <code>leagueId</code>, not on <code>type</code>.</p>
           </div>
         </div>
       </div>
@@ -191,9 +190,8 @@
         <div class="pipeline-step">
           <h3>Poll</h3>
           <p>Every second, Goalfeed re-checks each active game for the teams you're
-            watching — straight from NHL, MLB, CFL and NFL's own public APIs. NFL also
-            gets a push channel, ESPN's Fastcast WebSocket, layered on top for lower
-            latency.</p>
+            watching — straight from NHL's and MLB's own public APIs, the same ones
+            their websites use.</p>
         </div>
         <div class="pipeline-step">
           <h3>Diff</h3>
@@ -216,17 +214,14 @@
 
       <div class="callout callout--info" style="margin-top: var(--sp-6)">
         <span class="callout-tag">What "detects a score" really means</span>
-        <p>Every upstream source Goalfeed polls — NHL, MLB, CFL, NFL, and IIHF for the
-          leagues that go further — is an unofficial, undocumented public API, the same
-          one each league's own site uses. None of them are versioned or contractually
-          stable, so any of them can change shape without notice. And because detection is
-          a raw score-diff rather than a real event feed, it counts points, not plays: a
-          converted touchdown in the NFL or CFL currently fires as <strong>seven separate
-          <code>goal</code> events</strong> (one per point), not one. NHL and MLB don't have
-          this problem — a goal is always worth one point, so one score change is one
-          event, which is why the demo above sticks to those two. It's honest, it's simple,
-          and it's the thing to know before you wire an automation that assumes more
-          precision than that.</p>
+        <p>Every upstream source Goalfeed polls — NHL's and MLB's own public APIs — is
+              unofficial and undocumented, the same one each league's site uses. Neither is
+              versioned or contractually stable, so either can change shape without notice.
+              And because detection is a raw score-diff rather than a real event feed, it
+              counts points, not plays. For NHL and MLB that distinction doesn't bite: a goal
+              is always worth one point, so one score change is exactly one event. It would
+              bite for a sport where a single play is worth several points — which is part of
+              why the football leagues aren't listed yet.</p>
       </div>
     </div>
   </section>
@@ -236,10 +231,9 @@
     <div class="wrap">
       <div class="section-head">
         <p class="eyebrow">Leagues</p>
-        <h2>Four leagues fire goal events today.</h2>
-        <p class="lede">Two more have real code behind them but aren't part of the live
-          polling loop or a released build yet — shown here so the status is clear, not
-          because they're ready to use.</p>
+        <h2>Two leagues fire goal events today.</h2>
+        <p class="lede">NHL and MLB are supported and live. CFL and NFL have client code
+          in the repo but aren't listed below — see why underneath.</p>
       </div>
 
       <div class="league-grid">
@@ -253,50 +247,16 @@
           <div class="league-name">Major League Baseball</div>
           <span class="badge badge--live">Live</span>
         </div>
-        <div class="league-card">
-          <div class="league-code">CFL</div>
-          <div class="league-name">Canadian Football League</div>
-          <span class="badge badge--live">Live</span>
-        </div>
-        <div class="league-card">
-          <div class="league-code">NFL</div>
-          <div class="league-name">National Football League</div>
-          <span class="badge badge--live">Live</span>
-        </div>
-        <div class="league-card is-wip">
-          <div class="league-code">IIHF</div>
-          <div class="league-name">Int'l Ice Hockey Federation</div>
-          <span class="badge">API only</span>
-        </div>
-        <div class="league-card is-wip">
-          <div class="league-code">OLY</div>
-          <div class="league-name">Olympic hockey (M/W)</div>
-          <span class="badge badge--wip">In development</span>
-        </div>
       </div>
 
-      <div class="table-scroll" style="margin-top: var(--sp-6)">
-        <table>
-          <thead>
-            <tr><th>League</th><th>Status</th><th>What that means</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>IIHF</td>
-              <td>API only</td>
-              <td>The client and service are fully built and power the web API's
-                schedule and history lookups, but IIHF isn't registered in the live
-                polling loop — no Home Assistant events fire for IIHF games yet.</td>
-            </tr>
-            <tr>
-              <td>Olympic hockey</td>
-              <td>In development</td>
-              <td>Wired into live goal detection in active development, but the code
-                isn't part of a committed, released build yet. Not something you can
-                install today.</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="callout" style="margin-top: var(--sp-6)">
+        <span class="callout-tag">CFL and NFL aren't listed</span>
+        <p>Client code for both leagues exists in this repo, but neither is listed as
+          supported. Live testing on 2026-08-20 found both leagues' score tracking
+          broken — CFL's client discards a valid payload on a type mismatch, and NFL
+          parses a response shape ESPN doesn't send — so no goal event can fire for
+          either today. Fixes are in progress; a league gets listed again only once
+          it's been verified working against a live game.</p>
       </div>
     </div>
   </section>
@@ -537,8 +497,7 @@ automation:
       <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
     </span>
     <span class="footer-meta">
-      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
-      team. Goalfeed polls each league's own public, unofficial APIs — none of it is
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, or any team. Goalfeed polls each league's own public, unofficial APIs — none of it is
       official league data.
     </span>
   </div>

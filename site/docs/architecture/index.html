@@ -145,9 +145,8 @@ parsing)                  changes)                                      the web 
 
         <h2>Why polling, not push</h2>
         <p>Every upstream source Goalfeed talks to &mdash; the NHL's own API, MLB's Stats API,
-          ESPN's site API for NFL, CFL's scoreboard JSON, IIHF's realtime endpoint,
-          <code>olympics.com</code>'s WMR API &mdash; is an unofficial, undocumented endpoint
-          each league's own site or app happens to use. None of them offer a public,
+          ESPN's site API for NFL, CFL's scoreboard JSON &mdash; is an unofficial, undocumented
+          endpoint each league's own site or app happens to use. None of them offer a public,
           contractually stable subscription/webhook mechanism a third party can register for.
           Polling on a fixed interval and diffing state is the only integration surface these
           APIs actually offer; it's not a design preference over a "better" push option that
@@ -176,8 +175,8 @@ parsing)                  changes)                                      the web 
           happens to expose one for NFL specifically.</p>
 
         <h2>Goal detection is a raw score-diff, and that has a cost</h2>
-        <p>For every league except Olympic hockey, a league service does not consume the
-          upstream API's actual play-by-play feed to learn <em>what</em> scored. It compares
+        <p>No league service consumes the upstream API's actual play-by-play feed to learn
+          <em>what</em> scored. Each one compares
           the watched team's last-seen score to its current score and manufactures one event
           per point of increase. For NHL and MLB, that's exactly correct: every goal and every
           run is worth one point, so one point of increase is one real scoring event.</p>
@@ -185,21 +184,21 @@ parsing)                  changes)                                      the web 
           <span class="callout-tag">The consequence for NFL and CFL</span>
           <p>Football scoring isn't one point per score. A touchdown-plus-conversion is 7
             points, a field goal is 3, a safety is 2. Because detection is a raw score-diff,
-            a single touchdown-plus-conversion fires <strong>seven separate <code>goal</code>
+            a single touchdown-plus-conversion would fire <strong>seven separate <code>goal</code>
             events</strong> in the same tick &mdash; not one "touchdown" event. Goalfeed
             doesn't know it was a touchdown at all; it only knows the score went up by 7.
             An automation that plays a sound or flashes a light per event, with no debounce,
-            will fire seven times for one score. See
+            would fire seven times for one score. This is why the football leagues are not
+            listed as supported today &mdash; see <a href="/docs/leagues/">Leagues</a> for
+            their current status. See
             <a href="/docs/home-assistant/">Home Assistant automations</a> for how to design
             around this (delay-then-fire, or a state-based toggle instead of a per-event
             action).</p>
         </div>
-        <p>This also means NHL/MLB/NFL/CFL events carry an empty <code>Type</code> and
+        <p>This also means every league's events carry an empty <code>Type</code> and
           <code>Description</code> &mdash; there's no play-by-play data behind the score-diff
-          to describe. Only the (untracked, work-in-progress) Olympic hockey service consumes
-          a real event feed and populates those fields. See the
-          <a href="/docs/websocket/">WebSocket reference</a> for the exact payload shape this
-          produces.</p>
+          to describe. See the <a href="/docs/websocket/">WebSocket reference</a> for the exact
+          payload shape this produces.</p>
 
         <h2>No database, by design</h2>
         <p>The only durable state Goalfeed keeps is the JSONL app log
@@ -234,8 +233,7 @@ parsing)                  changes)                                      the web 
       <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
     </span>
     <span class="footer-meta">
-      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
-      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, or any team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
       official league data.
     </span>
   </div>

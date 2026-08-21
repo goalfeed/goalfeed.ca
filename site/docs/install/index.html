@@ -149,8 +149,8 @@ test_goals: false</code></pre>
           <span class="callout-tag">Caveat</span>
           <p>The add-on's <code>config.json</code> manifest only exposes <code>nhl_teams</code>
             and <code>mlb_teams</code> (plus <code>test_goals</code>) as options &mdash; there
-            is no CFL, NFL, IIHF, or Olympic option in the Configuration tab, even though the
-            underlying binary supports those leagues. To watch CFL or NFL teams from the
+            is no CFL or NFL option in the Configuration tab, even though the underlying
+            binary supports those leagues. To watch CFL or NFL teams from the
             add-on, you need to mount your own <code>config.yaml</code> into the container or
             set <code>GOALFEED_WATCH_CFL</code> / <code>GOALFEED_WATCH_NFL</code> environment
             variables on it directly &mdash; there's no in-UI path for this today. See the
@@ -297,8 +297,7 @@ docker run -d --name goalfeed -p 8080:8080 \
       <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
     </span>
     <span class="footer-meta">
-      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
-      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, or any team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
       official league data.
     </span>
   </div>

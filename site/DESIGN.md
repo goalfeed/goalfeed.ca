@@ -141,8 +141,7 @@ Type scale (fluid, `clamp()`-based, defined as custom properties):
   a note block.
 - **`.badge`** — small pill label. Neutral by default. **`.badge--live`**
   uses the `--live` token (not accent) for "supported"/connection-alive
-  status — the token name and the use finally match. **`.badge--wip`** uses
-  `--warn`.
+  status — the token name and the use finally match.
 - **`.table-scroll` + `<table>`** — horizontally scrollable table wrapper;
   never let a wide table scroll the page.
 - **`.breadcrumb`** — small mono trail (`Goalfeed / Docs / Page`), used on

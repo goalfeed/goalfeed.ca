@@ -145,21 +145,6 @@ watch:
                 <td><code>GOALFEED_WATCH_NFL</code></td><td>string list</td><td><code>[]</code></td>
                 <td>NFL team codes to watch &mdash; <strong>no CLI flag exists</strong>, YAML or
                   env only</td></tr>
-              <tr><td>&mdash;</td><td><code>watch.olympic_men</code></td>
-                <td><code>GOALFEED_WATCH_OLYMPIC_MEN</code></td><td>string list</td>
-                <td><code>[]</code></td>
-                <td>Olympic Men's Hockey team codes &mdash; no CLI flag; see the
-                  <a href="/docs/leagues/">leagues reference</a> for this league's WIP
-                  status</td></tr>
-              <tr><td>&mdash;</td><td><code>watch.olympic_women</code></td>
-                <td><code>GOALFEED_WATCH_OLYMPIC_WOMEN</code></td><td>string list</td>
-                <td><code>[]</code></td>
-                <td>Olympic Women's Hockey team codes &mdash; no CLI flag; same WIP status</td></tr>
-              <tr><td>&mdash;</td><td><code>watch.iihf</code></td>
-                <td><code>GOALFEED_WATCH_IIHF</code></td><td>string list</td><td><code>[]</code></td>
-                <td>IIHF team codes &mdash; only affects the on-demand
-                  <code>/api</code> endpoints, <strong>not</strong> the live-polling goal
-                  loop (see <a href="/docs/leagues/">leagues reference</a>)</td></tr>
               <tr><td>&mdash;</td><td><code>home_assistant.url</code></td>
                 <td><code>GOALFEED_HOME_ASSISTANT_URL</code></td><td>string</td>
                 <td><code>""</code></td>
@@ -228,9 +213,9 @@ watch:
             directory. If it's missing, the read fails silently and every key falls back to
             its zero value &mdash; see <a href="/docs/troubleshooting/">Troubleshooting</a>.</li>
           <li><strong>CLI flags exist only for <code>--nhl</code>/<code>--mlb</code>/<code>--cfl</code>.</strong>
-            NFL, IIHF, and Olympic Men's/Women's Hockey team lists are config-file or
-            environment-variable only &mdash; there's no flag for them, and none is planned to
-            appear here without one being added to <code>main.go</code>.</li>
+            The NFL team list is config-file or environment-variable only &mdash; there's no
+            flag for it, and none is planned to appear here without one being added to
+            <code>main.go</code>.</li>
           <li><strong>Precedence is config file &rarr; environment variable &rarr; CLI
             flag</strong> &mdash; a flag always wins over an env var, which always wins over
             the YAML file.</li>
@@ -323,8 +308,7 @@ export GOALFEED_HOME_ASSISTANT_ACCESS_TOKEN=your-long-lived-token
       <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
     </span>
     <span class="footer-meta">
-      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
-      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, or any team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
       official league data.
     </span>
   </div>

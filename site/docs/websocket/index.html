@@ -213,13 +213,12 @@
   }
 }</code></pre>
           </div>
-          <p>The <em>only</em> league service that currently populates <code>type</code> and
-            <code>description</code> is Olympic hockey &mdash; which is itself
-            untracked/work-in-progress (see the <a href="/docs/leagues/">leagues
-            reference</a>). If you're building a consumer, filter on <code>teamCode</code> and
-            <code>leagueId</code>, not on <code>data.type</code> &mdash; exactly the same
-            guidance as the <a href="/docs/home-assistant/">Home Assistant</a> event, since
-            both come from the same underlying <code>models.Event</code>.</p>
+          <p><code>type</code> and <code>description</code> are empty for every league in
+            this build &mdash; no league service currently populates them. If you're building
+            a consumer, filter on <code>teamCode</code> and <code>leagueId</code>, not on
+            <code>data.type</code> &mdash; exactly the same guidance as the
+            <a href="/docs/home-assistant/">Home Assistant</a> event, since both come from the
+            same underlying <code>models.Event</code>.</p>
         </div>
 
         <h2>Field reference: <code>event</code> data</h2>
@@ -267,8 +266,7 @@
       <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
     </span>
     <span class="footer-meta">
-      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
-      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, or any team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
       official league data.
     </span>
   </div>

@@ -177,9 +177,9 @@ tail -n 5 app.log.jsonl</code></pre>
 
         <h2>"I set <code>--nfl WPG</code> and got a flag error"</h2>
         <p><strong>Cause:</strong> <code>--nfl</code> isn't a real flag. The only registered
-          CLI flags are <code>--nhl</code>, <code>--mlb</code>, and <code>--cfl</code>. NFL,
-          IIHF, and Olympic Men's/Women's Hockey team lists are YAML/env-only
-          (<code>watch.nfl</code>, <code>GOALFEED_WATCH_NFL</code>, etc.).</p>
+          CLI flags are <code>--nhl</code>, <code>--mlb</code>, and <code>--cfl</code>. The NFL
+          team list is YAML/env-only (<code>watch.nfl</code>,
+          <code>GOALFEED_WATCH_NFL</code>, etc.).</p>
         <p><strong>Next step:</strong> set those via <code>config.yaml</code> or a
           <code>GOALFEED_WATCH_*</code> environment variable instead &mdash; see the full
           table in the <a href="/docs/configuration/">configuration reference</a>.</p>
@@ -218,13 +218,6 @@ tail -n 5 app.log.jsonl</code></pre>
           specifically want the runtime API to persist config to disk &mdash; see
           <a href="/docs/security/">Security</a> for why this defaults to off.</p>
 
-        <h2>IIHF games show up in the API but no goal ever fires</h2>
-        <p><strong>Cause:</strong> this is expected, not a bug. IIHF has a full client and
-          service and answers <code>/api/games/history</code>, <code>/api/upcoming</code>, and
-          <code>/api/teams</code>, but it is never registered in the live polling loop, so no
-          Home Assistant event fires for it. See the <a href="/docs/leagues/">leagues
-          reference</a> for the full tier breakdown.</p>
-
         <h2>Still stuck?</h2>
         <p>Open an issue with the exact log line and your <code>config.yaml</code> (redact the
           access token) at
@@ -249,8 +242,7 @@ tail -n 5 app.log.jsonl</code></pre>
       <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
     </span>
     <span class="footer-meta">
-      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
-      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, or any team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
       official league data.
     </span>
   </div>

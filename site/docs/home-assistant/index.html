@@ -115,11 +115,10 @@
         </div>
         <p>Filter on the event's <strong><code>teamCode</code></strong> field (and
           <code>leagueId</code> if you watch the same team code across two leagues), not on
-          the payload's internal <code>type</code> field &mdash; <code>type</code> is only
-          populated for Olympic hockey events today and left empty for NHL/MLB/NFL/CFL, so a
-          filter on it will silently miss every event from the four leagues that actually fire
-          live goals (see <a href="/docs/websocket/">WebSocket reference</a> for the same gap
-          on the WebSocket feed). Goalfeed does its own team filtering server-side before it
+          the payload's internal <code>type</code> field &mdash; <code>type</code> is empty for
+          every league today, so a filter on it will silently miss every event (see
+          <a href="/docs/websocket/">WebSocket reference</a> for the same gap on the WebSocket
+          feed). Goalfeed does its own team filtering server-side before it
           ever calls Home Assistant &mdash; only teams you've configured in
           <a href="/docs/configuration/"><code>watch.*</code></a> generate events at all &mdash;
           but the HA event itself carries no such restriction, so your automation's
@@ -150,13 +149,15 @@
 
         <div class="callout">
           <span class="callout-tag">A 7-point NFL touchdown fires seven events</span>
-          <p>Goal/score detection is a raw score-diff for every league except Olympic hockey:
-            Goalfeed compares the last-seen score to the current score and fires one event per
-            point of increase. For NHL and MLB that's exactly right &mdash; one goal, one
-            event. For NFL and CFL, a touchdown-plus-conversion (7 points) fires
+          <p>Goal/score detection is a raw score-diff for every league: Goalfeed compares the
+            last-seen score to the current score and fires one event per point of increase.
+            For NHL and MLB that's exactly right &mdash; one goal, one
+            event. For a football league, a touchdown-plus-conversion (7 points) would fire
             <strong>seven separate <code>goal</code> events</strong> in the same second, not
-            one "touchdown" event. If your automation plays a sound or flashes a light per
-            event without debouncing, a football score will trigger it seven times in a row.
+            one "touchdown" event &mdash; which is one reason NFL and CFL are not listed as
+            supported today (see <a href="/docs/leagues/">Leagues</a>). If those leagues are
+            listed in future, an automation that plays a sound per event without debouncing
+            would trigger seven times in a row for one score.
             See <a href="/docs/architecture/">Architecture</a> for why this is a design
             consequence, not a bug to be filed.</p>
         </div>
@@ -311,8 +312,7 @@ input_boolean:
       <a href="https://github.com/goalfeed/goalfeed/blob/main/LICENSE">MIT License</a>
     </span>
     <span class="footer-meta">
-      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, IIHF, the IOC, or any
-      team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
+      Not affiliated with or endorsed by the NHL, MLB, NFL, CFL, or any team. Goalfeed polls each league's own public, unofficial APIs &mdash; none of it is
       official league data.
     </span>
   </div>

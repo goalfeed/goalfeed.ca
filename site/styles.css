@@ -405,11 +405,6 @@ section + section { border-top: 1px solid var(--border-soft); }
   background: var(--live);
   box-shadow: 0 0 8px 1px var(--live-wash);
 }
-.badge--wip {
-  color: var(--warn);
-  background: var(--warn-wash);
-  border-color: color-mix(in srgb, var(--warn) 35%, transparent);
-}
 
 /* ---- callouts ---- */
 .callout {
@@ -1002,7 +997,8 @@ td code { white-space: nowrap; }
 /* ---- leagues ---- */
 .league-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 220px));
+  justify-content: start;
   gap: var(--sp-3);
   margin-top: var(--sp-7);
 }
